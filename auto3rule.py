@@ -155,14 +155,13 @@ class rule:
         while i<f:
             if body[i]=='.':
                 c=body[i+1]
-                if c!='+' and c!='*' and c!='{':
-                    if '\\'!=body[i-1]:
-                        self.puterror("pcre syntax is error for: . ")
-                        return
+                if (c!='+' or c!='*' or c!='{') and ('\\'!=body[i-1]):
+                    self.puterror("pcre syntax is error for . in %d" %i)
+                    return
             if body[i]=="/":
                 c=body[i-1]
                 if c!='\\':
-                    self.puterror("pcre syntax is error for: /,? ")
+                    self.puterror("pcre syntax is error for / in %d" %i)
                     return
             i+=1
                 
