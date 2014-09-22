@@ -1,0 +1,73 @@
+#====================
+#syntax file
+#author: guo guisheng
+#date:2014/07/04
+#==================
+#format:key /regular_expression/
+#regular_expression is not necessary
+#key is necessary
+#if you use a keyword in you rules,you should append this key in current file
+#======================
+#具有强大自定义性和可扩展性的程序，对snort规则进行语法检查
+#列出你将使用的所有合法关键字，可以不给出具体的语法形式，即关键字使用语法的正则表达式可以忽略，当忽略时，不进行对应关键字的语法检查
+#使用了未列出的关键字，程序将对对应的规则报keywords nonexist错误
+##号为注释符号
+#keyword /正则表达式/ 
+#keyword和/正则表达式中间空格，正则表达式使用/.../标识，正则表达式语法与snort语法一致
+#若发现bug，联系本人
+metadata
+flags
+nocase
+rawbytes
+byte_test
+byte_jump
+http_client_body
+http_cookie
+http_raw_cookie
+http_raw_header
+http_header
+http_method
+http_uri
+http_raw_uri
+http_stat_code
+http_stat_msg
+file_data
+threshold
+window
+fragbits
+itype
+fragoffset
+icode
+classtype
+ip_proto
+ipopts
+priority
+ttl
+id
+tag
+icmp_seq
+icmp_id
+tos
+ftpbounce
+asn1
+ack
+seq
+classtype-danger
+msg /^\".*\"$/
+content /^!?\".*\"$/
+uricontent /^!?\".*\"$/
+pcre /^!?\"/.*/[ismxAEGRUBPHMCOIDKYS]*\"$/
+offset /^\d+$/
+depth /^\d+$/
+distance /^\x2d?\d+$/
+within /^\d+$/
+tid /^\d+$/
+sid /^\d+$/
+rev /^\d+$/
+dsize /^(\d+<>\d+)|((<|>)?\d+)$/
+urilen /^(\d+[<>]\d+(,(norm|raw))?)|([<|>]\d+(,(norm|raw))?)|(\d+)$/
+isdataat /^!?\d+(,(relative|rawbytes))?$/
+flow /(^(to_server|to_client|from_client|from_server)(,?(established|not_established|stateless))?(,?(no_stream|only_stream))?$)|(^(established|not_established|stateless)(,?(to_server|to_client|from_client|from_server))?(,?(no_stream|only_stream))?$)/
+reference /^\w+(,[\d-]+)+$/
+flowbits /^(set|setx|unset|toggle|isset|isnotset|noalert|reset)(,.+){0,2}$/
+head /^(alert|drop|log|pass|activate) +(tcp|udp|ip|icmp) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+) +(->|<-|<>) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+)$/
