@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import lib_rule
 import lib_pickle
+import lib_threadpool
 import os
 import sys
 import shutil
@@ -9,8 +10,9 @@ import re
 #work model:
 #1 create general rule from rule data file
 #2 get information from internet or packet file
-argvs={"-f":"","-cid":666666,"-work":"1","-gcnvd":0,"-gversion":0,"-gdesc":0,"-tran":0,"-debug":0,'-gmsg':0,'-gbid':0,'-gauto':0,"-admin":0,\
-       "-desc":"desc","-msg":"msg","-see":"see","-version":"version","-cve":"cve",\
+argvs={"-f":"","-cid":666666,"-work":"1","-gcnvd":0,"-gversion":0,"-gdesc":0,\
+       "-tran":0,"-debug":0,'-gmsg':0,'-gbid':0,'-gauto':0,"-admin":0,"-multi":0,\
+       "-desc":"desc","-msg":"msg","-see":"see","-version":"version","-cve":"cve","-cnnvd":"cnnvd",\
       "-bid":"bid","-cnvd":"cnvd","-sip":"sip","-sport":"sport","-dip":"dip","-type":"type","-flow":"flow","-protocol":"protocol",\
       "-dport":"dport","-solve":"solve","-sid":"sid","-ename":"ename","-body":"body","-tid":"tid","-cname":"cname"}
 ########################################################################
@@ -32,6 +34,7 @@ class rule:
         self.cve=""
         self.bid=""
         self.cnvd=""
+        self.cnnvd=""
         self.version=""
         self.solve="升级系统版本到最新"
         self.start=0
@@ -261,6 +264,8 @@ class rule:
             self.ename=data
         elif type=="msg":
             self.msg=data
+        elif type=="cnnvd":
+            self.cnnvd=data
         elif type=="protocol":
             self.protocol=data
             if self.protocol=='ip' or self.protocol=="IP":
@@ -279,40 +284,20 @@ class rule:
         return
     
 def setparameter(para,i):
-    if para=="-gcnvd":
+    pname=["-gcnvd","-gdesc","-gversion","-tran","-debug","-gmsg","-gbid","-gauto","-admin"]
+    if para in pname:
         argvs[para]=1
         return 1
-    if para=='-gdesc':
-        argvs[para]=1
-        return 1
-    if para=='-gversion':
-        argvs[para]=1
-        return 1
-    if para=="-tran":
-        argvs[para]=1
-        return 1
-    if para=="-debug":
-        argvs['-debug']=1
-        return 1
-    if para=="-gmsg":
-        argvs['-gmsg']=1
-        return 1
-    if para=="-gbid":
-        argvs['-gbid']=1
-        return 1
-    if para=="-gauto":
-        argvs['-gauto']=1
-        return 1
-    if para=="-admin":
-        argvs['-admin']=1
-        return 1
+    
     value=sys.argv[i+1]
-    if para=="-cid":
+    pname=['-cid','-multi']
+    if para in pname:
         argvs[para]=int(value)
     else:
         argvs[para]=value
     return 2
 
+#set attributle value for struct of rule
 def opera_data(lnum,line,srule):
     values=argvs.values()
     line=line.strip()
@@ -338,11 +323,14 @@ def opera_data(lnum,line,srule):
     #exit(1)
     srule.redundancy+=line+"\n"
     
-
+#read file and structure rule object and output
 def opera(func):
     f=argvs['-f']
     f=open(f,'r')
     srule=None
+    threadpool=None
+    if argvs['-multi']>1:
+        threadpool=lib_threadpool.threadpool(func)
     lnum=0
     for line in f:
         lnum+=1
@@ -350,7 +338,10 @@ def opera(func):
             continue
         if line[0]=="@":
             if srule:
-                func(srule)
+                if threadpool:
+                    threadpool.addtask(srule)
+                else:
+                    func(srule)
                 srule=rule()
                 srule.start=lnum
                 continue
@@ -363,6 +354,9 @@ def opera(func):
         else:
             print "use '@' in begin of line for every struct grule"
             exit(1)
+    if threadpool:
+        threadpool.waitcomplete()
+        
     if argvs['-work']=='1':
         ofile.write('@==============================')
   #  if srule:
@@ -420,6 +414,10 @@ def outdata(rinstan):
  
     if rinstan.cnvd:
         line="cnvd:"+rinstan.cnvd+"\n"
+        ofile.write(line)
+        
+    if rinstan.cnnvd:
+        line="cnnvd:"+rinstan.cnnvd+'\n'
         ofile.write(line)
 
     if rinstan.bid:
@@ -493,6 +491,9 @@ def opera_crule(rinstan):
         if not rinstan.bid:
             rinstan.bid=bid
         rinstan.edesc=desc
+    if rinstan.cve and rinstan.cnnvd=='' and argvs['-gauto']:
+        cnnvd=lib_rule.getCNNVD(rinstan.cve)
+        rinstan.cnnvd=cnnvd
     if (argvs['-gcnvd'] or argvs['-gauto']) and (rinstan.cnvd=="" and rinstan.msg=="") and rinstan.cve:
         cname,cnvd=lib_rule.getCNVD(rinstan.cve)
         rinstan.cname=cname
@@ -502,7 +503,7 @@ def opera_crule(rinstan):
         if rinstan.ename=='':
             rinstan.ename=ename
         rinstan.version=version
-    if (argvs['-gauto'] or argvs['-gdesc']) and rinstan.desc=="":
+    if (argvs['-gauto'] and rinstan.desc=="") or argvs['-gdesc']:
         if rinstan.cnvd:
             cname,desc=lib_rule.getdesc4cnvd(rinstan.cnvd)
             rinstan.desc=desc

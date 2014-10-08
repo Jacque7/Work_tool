@@ -1,0 +1,100 @@
+Public Sub Proc()
+Dim rs
+Dim path As String
+rs = CreateTitle()
+'这里填写文件路径，要求是指定格式写的文件（绝对路径），编码格式为本地编码，即gb2312等编码,utf-8格式编码会出现汉字乱码。。
+path = "xxxxxxxxxxx"
+rs = ReadFile(path)
+End Sub
+
+Public Function CreateTitle()
+Range("A1").Value = "漏洞名称"
+Range("B1").Value = "漏洞描述"
+Range("C1").Value = "其他资料"
+Range("D1").Value = "解决方法"
+Range("E1").Value = "BUGTRAQ ID"
+Range("F1").Value = "CVE(CAN) ID"
+Range("G1").Value = "受影响系统："
+Range("H1").Value = "时间"
+Range("I1").Value = "英文名称"
+Range("J1").Value = "CNVD"
+Range("A1", "J1").Font.Bold = True
+Dim c As Byte
+For c = 65 To 74
+    Columns(Chr(c) & ":" & Chr(c)).ColumnWidth = 23 '修改列宽
+   
+Next
+End Function
+
+Public Function ReadFile(path As String)
+Dim fileobj As Object
+Dim textobj As Object
+Dim textline As String
+Dim num As Integer
+Dim tmp As Byte
+Dim ri(9) As String
+Set fileobj = CreateObject("Scripting.FileSystemObject")
+Set textobj = fileobj.OpenTextFile(path)
+
+Do While Not textobj.AtEndOfLine
+
+txtline = Trim(textobj.ReadLine)
+If Left(txtline, 1) = "@" And num > 0 Then
+    rs = fill(ri, num)
+    For tmp = 0 To 9
+        ri(tmp) = ""
+    Next
+    num = num + 1
+ElseIf Left(txtline, 1) = "@" And num = 0 Then
+    For tmp = 0 To 9
+        ri(tmp) = ""
+    Next
+    num = num + 1
+ElseIf Left(txtline, 1) <> "/" Then
+    Dim arr
+    arr = Split(txtline, ":", 2)
+    Select Case arr(0)
+    Case "msg"
+        ri(0) = arr(1)
+    Case "desc"
+        ri(1) = arr(1)
+    Case "other","see"
+        ri(2) = arr(1)
+    Case "solve"
+        ri(3) = arr(1)
+        If arr(1) = "" Then
+        ri(3) = "请升级系统版本，解决此漏洞"
+        End If
+    Case "bugtraq","bid"
+        ri(4) = arr(1)
+    Case "cve"
+        ri(5) = arr(1)
+    Case "version"
+        ri(6) = arr(1)
+    Case "ename"
+        ri(8) = arr(1)
+    Case "cnvd"
+        ri(9) = arr(1)
+    End Select
+End If
+
+Loop
+
+End Function
+
+Public Function fill(info() As String, num As Integer)
+Dim row As Integer
+Dim col As Integer
+row = 1 + num
+
+For col = 65 To 74
+    With Range(Chr(col) & Trim(Str(row)))
+        .Value = info(col - 65)
+        .HorizontalAlignment = xlLeft
+        .VerticalAlignment = xlCenter
+        .WrapText = True '自动换行
+    End With
+Next
+
+Rows(Trim(Str(row)) & ":" & Trim(Str(row))).RowHeight = 60 '修改行高
+End Function

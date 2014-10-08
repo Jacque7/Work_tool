@@ -30,6 +30,7 @@ bdfanyi_heads={"Host":"fanyi.baidu.com",
 wcnvd=httplib2.Http()
 sf=httplib2.Http()
 wcve=httplib2.Http()
+wcnnvd=httplib2.Http()
 
 class grule:
     def __init__(self):
@@ -183,7 +184,13 @@ def getCNVD(cve):
             return "",""
     except Exception:
         return "",""
-    
+
+def searchdesc4soup(ss):
+    for s in ss:
+        if s('td')[0].contents[0]==u'漏洞描述':
+            return s('td')[1].contents
+    return None
+
 def getdesc4cnvd(cnvd):  
     url="http://www.cnvd.org.cn/flaw/show/CNVD-"+cnvd
     try:
@@ -195,7 +202,7 @@ def getdesc4cnvd(cnvd):
         rs=rs.find('tbody')
         rs=rs.findAll('tr')
         desc=""
-        rs=rs[5]('td')[1].contents
+        rs=searchdesc4soup(rs)
         for i in rs:
             if type(i)==type(cname):
                 desc+=i
@@ -267,7 +274,8 @@ def getidmsg4rule(line):
 
 def getdata4line(line,brule=0):
     if line[0]=="#":
-        return
+        if line[1:7]!='TOPIDP':
+            return
     if line.find("flowbits:noalert;")>0:
         return
     s=line.find("msg:");
@@ -436,6 +444,15 @@ def gettid4dir(path):
             tids.append(lt[:-5])
     return tids
             
-        
-                
+def getCNNVD(cve):
+    '''
+    soup=BeautifulSoup(body)
+    if len(soup.find('div',{"class":"dispage"}).contents[0])<10:
+        return None
+    '''
+    head,body=wcnnvd.request("http://www.cnnvd.org.cn/vulnerability/index/cnnvdid2/CVE-"+cve)
+    index=body.find('>CNNVD')
+    if index<=0:
+        return None
+    return body[index+7:body.find('<',index)]
     

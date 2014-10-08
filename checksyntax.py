@@ -3,9 +3,10 @@ import sys
 import re
 
 def check_topidp(line):
-    if line.find('file_data')>0 or line.find('http_cookie')>0:
+    search=uncompatibility.search(line)
+    if search:
         if line[:7]!='#TOPIDP':
-            printmsg("contain 'file_data' or 'http_cookie' of rule must have '#TOPIDP' in begin of line")
+            printmsg("contain uncompatibility key '%s' of rule that must have #TOPIDP in begin" %search.group())
             return 0
     return 1
 
@@ -71,6 +72,7 @@ def getregular(res):
     return None
 
 def keysyntax(path):
+    global uncompatibility
     path=path+'\\key.syn'
     #path=""
     try:
@@ -85,13 +87,17 @@ def keysyntax(path):
     
     for line in f:
         line=line.strip()
-        if line[0]=='#':
+        if (not line) or line[0]=='#' :
             continue
         lt=line.split(' ',1)
         if len(lt)==1:
             keys[lt[0]]=None
             continue
         key=lt[0]
+        if key=="@uncompatibility":
+            if 'uncompatibility' in globals():
+                uncompatibility=re.compile(lt[1].strip())
+            continue
         regular=getregular(lt[1])
         if not regular:
             print line,':syntax file error'
@@ -211,22 +217,19 @@ if len(sys.argv)<2:
     print "-------------------------"
     print "Author: Guo Guisheng"
     print "Date: 2014/07/05"
-    print "Version:1.4"
+    print "Version:2.0"
     print "User: checksyntax.py path mode"
     print "path1: The path of file for rule"
     print "mode : They are could be '-drsi' "
     print "d: debug model "
     print "r: strict check for regular syntax"
     print "s: strict check for key value"
-    print "i: check file_data and http_cookie whether have #TOPIDP in first line"
+    print "i: check can't compatibility key whether have #TOPIDP in first line"
     print "-------------------------"
     sys.exit()
 
 requireV()
-path=sys.argv[1]
-stxpath=os.path.split(sys.argv[0])[0]
 model=0
-
 if len(sys.argv)>=3:
     if sys.argv[2][0]!='-':
         print "paramter error,again!!!"
@@ -239,7 +242,9 @@ if len(sys.argv)>=3:
         model=model|4
     if 'i' in sys.argv[2]:
         model=model|8
-
+        uncompatibility=None
+path=sys.argv[1]
+stxpath=os.path.split(sys.argv[0])[0]
 if not os.path.isfile(path):
     print "this file is invaild,again!!"
     sys.exit()

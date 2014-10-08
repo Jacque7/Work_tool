@@ -102,7 +102,7 @@ def snortlist(path):
     plist=args['-p']+"\\pcap.list"
     print "detection file from "+plist
     print "detection starting...."
-    subp=subprocess.Popen("D:/Snort/ssnort.bat -flist "+plist,stdin=subprocess.PIPE,stdout=subprocess.PIPE)#,shell=True)
+    subp=subprocess.Popen("D:/Snort/ssnort.bat -flist \""+plist+"\"",stdin=subprocess.PIPE,stdout=subprocess.PIPE)#,shell=True)
     #stdout, stderr = subp.communicate()
     #subp.wait()
     if not subp.returncode:
