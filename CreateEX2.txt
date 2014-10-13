@@ -2,30 +2,40 @@ Public Sub Proc()
 Dim rs
 Dim path As String
 rs = CreateTitle()
+
 '这里填写文件路径，注意要按格式写的文件，编码格式要求为本地编码，即gbk，gb2312等汉字编码，
 '生成的文件正常情况下为本地编码，不需修改
 'utf-8格式编码会出现汉字乱码
-path = "xxxxxxxxxxxxxxx.grule"
+path = "F:\\Work\\t0929\\packet\\vinfo-gbk.grule.grule"
 rs = ReadFile(path)
 End Sub
 
 Public Function CreateTitle()
-Range("A1").Value = "漏洞名称"
-Range("B1").Value = "漏洞描述"
-Range("C1").Value = "其他资料"
-Range("D1").Value = "解决方法"
-Range("E1").Value = "BUGTRAQ ID"
-Range("F1").Value = "CVE(CAN) ID"
-Range("G1").Value = "受影响系统："
-Range("H1").Value = "时间"
-Range("I1").Value = "英文名称"
-Range("J1").Value = "CNVD"
-Range("A1", "J1").Font.Bold = True
-Dim c As Byte
-For c = 65 To 74
-    Columns(Chr(c) & ":" & Chr(c)).ColumnWidth = 23 '修改列宽
+Range("A1").Value = "TID"
+Range("B1").Value = "精选规则"
+Range("C1").Value = "流行程度"
+Range("D1").Value = "风险等级"
+Range("E1").Value = "攻击类型"
+Range("F1").Value = "操作系统"
+Range("G1").Value = "默认阻断"
+Range("H1").Value = "标题"
+Range("I1").Value = "BUGTRAQ ID"
+Range("J1").Value = "CVE ID"
+Range("K1").Value = "应用类型"
+Range("L1").Value = "漏洞描述"
+Range("M1").Value = "攻击范围"
+Range("N1").Value = "解决方法"
+Range("O1").Value = "其他资料"
+Range("P1").Value = "备注"
+Range("Q1").Value = "CNNVD"
+Range("R1").Value = "CNVD"
+
+'Range("A1", "J1").Font.Bold = True
+'Dim c As Byte
+'For c = 65 To 74
+'    Columns(Chr(c) & ":" & Chr(c)).ColumnWidth = 23 '修改列宽
    
-Next
+'Next
 End Function
 
 Public Function ReadFile(path As String)
@@ -34,7 +44,7 @@ Dim textobj As Object
 Dim textline As String
 Dim num As Integer
 Dim tmp As Byte
-Dim ri(10) As String
+Dim ri(18) As String
 Set fileobj = CreateObject("Scripting.FileSystemObject")
 Set textobj = fileobj.OpenTextFile(path)
 
@@ -42,13 +52,14 @@ Do While Not textobj.AtEndOfLine
 
 txtline = Trim(textobj.ReadLine)
 If Left(txtline, 1) = "@" And num > 0 Then
+    rs = prepro(ri)
     rs = fill(ri, num)
-    For tmp = 0 To 10
+    For tmp = 0 To 18
         ri(tmp) = ""
     Next
     num = num + 1
 ElseIf Left(txtline, 1) = "@" And num = 0 Then
-    For tmp = 0 To 10
+    For tmp = 0 To 18
         ri(tmp) = ""
     Next
     num = num + 1
@@ -56,58 +67,124 @@ ElseIf Left(txtline, 1) <> "/" Then
     Dim arr
     arr = Split(txtline, ":", 2)
     Select Case arr(0)
-    Case "msg"
-        ri(0) = arr(1)
-    Case "desc"
+    Case "precise"
         ri(1) = arr(1)
-    Case "other", "see"
+    Case "pop"
         ri(2) = arr(1)
-    Case "solve"
+    Case "risk"
         ri(3) = arr(1)
+    Case "ttype"
+        ri(4) = arr(1)
+    Case "os"
+        ri(5) = arr(1)
+    Case "block"
+        ri(6) = arr(1)
+    Case "msg"
+        ri(7) = arr(1)
+    Case "desc"
+        ri(11) = arr(1)
+    Case "other", "see"
+        ri(14) = arr(1)
+    Case "solve"
+        ri(13) = arr(1)
         If arr(1) = "" Then
-        ri(3) = "请升级系统版本，解决此漏洞"
+        ri(13) = "请升级系统版本，解决此漏洞"
         End If
     Case "bugtraq", "bid"
-        ri(4) = arr(1)
-    Case "cve"
-        ri(5) = arr(1)
-    Case "version"
-        ri(6) = arr(1)
-    Case "ename"
         ri(8) = arr(1)
-    Case "cnvd"
+    Case "cve"
         ri(9) = arr(1)
-    Case "cname"
+    Case "atype"
         ri(10) = arr(1)
+    Case "version"
+        ri(12) = arr(1)
+    Case "cnvd"
+        ri(17) = arr(1)
+    Case "cnnvd"
+        ri(18) = arr(1)
     End Select
 End If
 
 Loop
 
 End Function
+Public Function prepro(data() As String)
+'If data(0) = "" And data(10) <> "" Then
+'    data(0) = data(10)
+'End If
+
+If data(14) = "" And data(8) <> "" Then
+    data(14) = "http://www.securityfocus.com/bid/" + data(8)
+ElseIf data(14) = "" And data(9) <> "" Then
+    data(14) = "http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=" + data(9)
+End If
+
+If data(1) = "1" Or data(1) = "T" Then 'precise
+    data(1) = "TRUE"
+End If
+
+If data(2) = "" Then 'pop
+    data(2) = "2"
+End If
+    
+If data(3) = "" Then 'risk
+    data(3) = "2"
+
+End If
+
+If data(4) = "" Then 'ttype
+    data(4) = "6"
+ElseIf data(4) = "ddos" Then
+    data(4) = "1"
+ElseIf data(4) = "overflow" Then
+    data(4) = "2"
+ElseIf data(4) = "http" Then
+    data(4) = "6"
+ElseIf data(4) = "rpc" Then
+    data(4) = "7"
+ElseIf data(4) = "system" Then
+    data(4) = "10"
+ElseIf data(4) = "other" Then
+    data(4) = "11"
+End If
+
+If data(5) = "" Then 'os
+    data(5) = "3"
+ElseIf data(5) = "win" Then
+    data(5) = "1"
+ElseIf data(5) = "linux" Then
+    data(5) = "2"
+ElseIf data(5) = "all" Then
+    data(5) = "3"
+End If
+
+If data(6) = "1" Or data(6) = "T" Then 'block
+    data(6) = "TRUE"
+End If
+
+If data(10) = "" Then 'atype
+    data(10) = "WEB APP"
+End If
+
+End Function
+
 
 Public Function fill(info() As String, num As Integer)
 Dim row As Integer
 Dim col As Integer
 row = 1 + num
-If info(0) = "" And info(10) <> "" Then
-    info(0) = info(10)
-End If
 
-If info(2) = "" And info(4) <> "" Then
-    info(2) = "http://www.securityfocus.com/bid/" + info(4)
-ElseIf info(2) = "" And info(5) <> "" Then
-    info(2) = "http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=" + info(5)
-End If
-
-For col = 65 To 74
+For col = 65 To 82
     With Range(Chr(col) & Trim(Str(row)))
         .Value = info(col - 65)
-        .HorizontalAlignment = xlLeft
-        .VerticalAlignment = xlCenter
-        .WrapText = True '自动换行
+        '.HorizontalAlignment = xlLeft
+        '.VerticalAlignment = xlCenter
+        '.WrapText = True '自动换行
     End With
 Next
 
-Rows(Trim(Str(row)) & ":" & Trim(Str(row))).RowHeight = 60 '修改行高
+'Rows(Trim(Str(row)) & ":" & Trim(Str(row))).RowHeight = 60 '修改行高
 End Function
+
+
+

@@ -2,8 +2,10 @@ Public Sub Proc()
 Dim rs
 Dim path As String
 rs = CreateTitle()
-'这里填写文件路径，要求是指定格式写的文件（绝对路径），编码格式为本地编码，即gb2312等编码,utf-8格式编码会出现汉字乱码。。
-path = "xxxxxxxxxxx"
+'这里填写文件路径，注意要按格式写的文件，编码格式要求为本地编码，即gbk，gb2312等汉字编码，
+'生成的文件正常情况下为本地编码，不需修改
+'utf-8格式编码会出现汉字乱码
+path = "xxxxxxxxxxxxxxx.grule"
 rs = ReadFile(path)
 End Sub
 
@@ -32,7 +34,7 @@ Dim textobj As Object
 Dim textline As String
 Dim num As Integer
 Dim tmp As Byte
-Dim ri(9) As String
+Dim ri(10) As String
 Set fileobj = CreateObject("Scripting.FileSystemObject")
 Set textobj = fileobj.OpenTextFile(path)
 
@@ -41,12 +43,12 @@ Do While Not textobj.AtEndOfLine
 txtline = Trim(textobj.ReadLine)
 If Left(txtline, 1) = "@" And num > 0 Then
     rs = fill(ri, num)
-    For tmp = 0 To 9
+    For tmp = 0 To 10
         ri(tmp) = ""
     Next
     num = num + 1
 ElseIf Left(txtline, 1) = "@" And num = 0 Then
-    For tmp = 0 To 9
+    For tmp = 0 To 10
         ri(tmp) = ""
     Next
     num = num + 1
@@ -58,14 +60,14 @@ ElseIf Left(txtline, 1) <> "/" Then
         ri(0) = arr(1)
     Case "desc"
         ri(1) = arr(1)
-    Case "other","see"
+    Case "other", "see"
         ri(2) = arr(1)
     Case "solve"
         ri(3) = arr(1)
         If arr(1) = "" Then
         ri(3) = "请升级系统版本，解决此漏洞"
         End If
-    Case "bugtraq","bid"
+    Case "bugtraq", "bid"
         ri(4) = arr(1)
     Case "cve"
         ri(5) = arr(1)
@@ -75,6 +77,8 @@ ElseIf Left(txtline, 1) <> "/" Then
         ri(8) = arr(1)
     Case "cnvd"
         ri(9) = arr(1)
+    Case "cname"
+        ri(10) = arr(1)
     End Select
 End If
 
@@ -86,6 +90,15 @@ Public Function fill(info() As String, num As Integer)
 Dim row As Integer
 Dim col As Integer
 row = 1 + num
+If info(0) = "" And info(10) <> "" Then
+    info(0) = info(10)
+End If
+
+If info(2) = "" And info(4) <> "" Then
+    info(2) = "http://www.securityfocus.com/bid/" + info(4)
+ElseIf info(2) = "" And info(5) <> "" Then
+    info(2) = "http://www.cve.mitre.org/cgi-bin/cvename.cgi?name=" + info(5)
+End If
 
 For col = 65 To 74
     With Range(Chr(col) & Trim(Str(row)))
