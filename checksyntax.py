@@ -30,10 +30,13 @@ def check(line):
     return check_head(head)&check_body(body)
 
 def printmsg(msg,tp=0):
+    global abnormals
     if tp:
         print "Alert in %d: %s" %(curline,msg)
     else:
         print "Error in %d: %s" %(curline,msg)
+    abnormals+=1
+    
 
 def syntax_regular(rs):
     bracket_pair=[]
@@ -127,7 +130,7 @@ def check_body(body):
     i=1
     cur=1
     if body[-2:]!=';)':
-        printmsg("';)' is must,invaild rule body,loss right bracket or have blank")
+        printmsg("';)' is must,invaild rule body,loss right bracket or have blank at %d" %len(body)-2)
         return 0
     while i<len(body):
         if body[i]==';':
@@ -140,16 +143,16 @@ def check_body(body):
                 keys[key]
                 
                 if body[i-1]==' ':
-                    printmsg(key+"::have nonecessary blank before semicolon") #must no blank before semicolon
+                    printmsg(key+"::have nonecessary blank before semicolon at %d" %i) #must no blank before semicolon
                     
                 if (body[i+1]!=' ' or body[i+2]==' ') and body[i+1]!=')':
-                    printmsg(key+'::after this key must have one blank only') #have one blank after key
+                    printmsg(key+'::after this key must have one blank only at %d' %i) #have one blank after key
                     #return 0
                 i=i+1
                 cur=i         
                 continue
             except KeyError:
-                printmsg(key+"::nonexist this keyword")
+                printmsg(key+"::nonexist this keyword at %d" %cur)
                 return 0
             
             
@@ -168,24 +171,24 @@ def check_body(body):
                 
                 if j<0:
                     #if key!='rev':
-                    printmsg(key+"::loss semicolon")
+                    printmsg(key+"::loss semicolon at %d" %j)
                     return 0
                 
                 rs=body[i+1:j]#.strip()
                 
                 if (model&4) and (len(rs.strip())<len(rs)):
-                    printmsg(key+"::the vaule of key have nonecessary blank") #key value have no blank at hean and end
+                    printmsg(key+"::the vaule for the key have nonecessary blank at %d" %j) #key value have no blank at hean and end
                     
                 if model&1:
                     print rs              
 
                 ree=keys[key]
                 if ree and (not ree.match(rs)):
-                    printmsg(key+'::syntax error or have blank') #check syntax form key.syn
+                    printmsg(key+'::syntax error or have blank at %d' %j) #check syntax form key.syn
                     return 0
                 try:
                     if (body[j+1]!=' ' or body[j+2]==' ') and body[j+1]!=')':
-                        printmsg(key+'::after this key must have one blank only') #have one blank after key
+                        printmsg(key+'::after this key must have one blank only at %d' %j) #have one blank after key
                         #return 0
                 except IndexError:
                     pass
@@ -199,7 +202,7 @@ def check_body(body):
                 cur=i
                 continue
             except KeyError:
-                printmsg(key+"::nonexist this keyword")
+                printmsg(key+"::nonexist this keyword at %d" %cur)
                 return 0
         i+=1
     return 1
@@ -217,7 +220,7 @@ if len(sys.argv)<2:
     print "-------------------------"
     print "Author: Guo Guisheng"
     print "Date: 2014/07/05"
-    print "Version:2.0"
+    print "Version:2.1"
     print "User: checksyntax.py path mode"
     print "path1: The path of file for rule"
     print "mode : They are could be '-drsi' "
@@ -261,8 +264,8 @@ for line in f:
     rules+=1
     if model&1:
         print "==================================="
-    if not check(line):
-        abnormals+=1
+    check(line)
+    #    abnormals+=1
 
 print "===================================="
 print "lines of number is: %d" %curline
