@@ -6,13 +6,15 @@ import Queue
 class threadpool(threading.Thread):
 
     #----------------------------------------------------------------------
-    def __init__(self,tmax=20,invrt=1):
+    def __init__(self,tmax=20,invrt=1,overact=None,start=True):
         threading.Thread.__init__(self)
         self.queue=Queue.Queue()
         self.threads=[None]*tmax
         self.tmax=tmax
         self.invrt=invrt
-        self.start()
+        self.overact=overact
+        if start:
+            self.start()
         
     def run(self):
         while True:
@@ -21,9 +23,11 @@ class threadpool(threading.Thread):
                 slot=self.getthreadslot()
                 self.starttask(slot,func,args)
             except Queue.Empty:
-                print "Thread Pool is empty"
+                print "\nThread Pool is empty"
                 print "Wait subthread complete..."
                 self.waitcomplete()
+                if self.overact:
+                    self.overact[0](self.overact[1])
                 exit(0)
                 #return
         
@@ -40,8 +44,8 @@ class threadpool(threading.Thread):
     def starttask(self,slot,func,args):
         self.threads[slot]=threading.Thread(target=func,args=args)
         self.threads[slot].start()
-        print self.threads[slot].getName()
-        
+        #print self.threads[slot].getName()[7:],
+        print "=",
     def addtask(self,func,args):
         self.queue.put((func,args))
     
