@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lib_rule
 import lib_pickle
-import lib_threadpool
+import lib_TheardPool
 import os
 import sys
 import shutil
@@ -330,7 +330,7 @@ def opera(func):
     srule=None
     threadpool=None
     if argvs['-multi']>1:
-        threadpool=lib_threadpool.threadpool(func)
+        threadpool=lib_TheardPool.threadpool(argvs['-multi'])
     lnum=0
     for line in f:
         lnum+=1
@@ -339,7 +339,7 @@ def opera(func):
         if line[0]=="@":
             if srule:
                 if threadpool:
-                    threadpool.addtask(srule)
+                    threadpool.addtask(func,(srule,))
                 else:
                     func(srule)
                 srule=rule()
@@ -390,9 +390,13 @@ def typeaction(rinstan):
     return 0
         
 import random
+import threading
 gmsg=[]
+mylock=threading.RLock()
 
 def outdata(rinstan):
+    if argvs['-multi']>1:
+        mylock.acquire()
     rinstan.authdata(1)
     rinstan.clearmsg()
     global gobject
@@ -484,6 +488,8 @@ def outdata(rinstan):
         #except Exception:
         #    ofile.write(line.encode('utf-8'))
     #ofile.flush()
+    if argvs['-multi']>1:
+        mylock.release()
 
 def opera_crule(rinstan):
     if rinstan.cve and (rinstan.bid=='' or rinstan.desc=='') and (argvs['-gbid'] or argvs['-gauto']):

@@ -15,6 +15,7 @@ from bs4 import *
 #import impacket.pcapfile as ppf
 import json
 import os
+import urllib2
 
 cnvd_heads={"Host":"www.cnvd.org.cn",
         "Accept":"text/html, */*",
@@ -27,6 +28,7 @@ bdfanyi_heads={"Host":"fanyi.baidu.com",
                "Content-Type":"application/x-www-form-urlencoded; charset=UTF-8",
                "Connection":"keep-alive",
                "Cache-Control":"no-cache"}
+
 wcnvd=httplib2.Http()
 sf=httplib2.Http()
 wcve=httplib2.Http()
@@ -156,10 +158,18 @@ class grule:
             if not self.msg:
                 self.msg=cname
 
+
+
+def gethttpdata(url):
+    rs=urllib2.urlopen(url)
+    if rs and rs.getcode()==200:
+        return rs.read()
+    
 def getversion4bid(bid):
     url="http://www.securityfocus.com/bid/"+bid
     try:
         rp,con=sf.request(url)
+        #con=gethttpdata(url)
         soup=BeautifulSoup(con)
         rs=soup.find('div',id='vulnerability')
         ename=rs('span')[0].contents[0]        
