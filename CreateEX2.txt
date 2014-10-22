@@ -6,7 +6,7 @@ rs = CreateTitle()
 '这里填写文件路径，注意要按格式写的文件，编码格式要求为本地编码，即gbk，gb2312等汉字编码，
 '生成的文件正常情况下为本地编码，不需修改
 'utf-8格式编码会出现汉字乱码
-path = "F:\\Work\\t0929\\packet\\vinfo-gbk.grule.grule"
+path = "F:\\Work\\t0929\\cve\\cve-gbk.grule.grule"
 rs = ReadFile(path)
 End Sub
 
@@ -129,7 +129,12 @@ End If
     
 If data(3) = "" Then 'risk
     data(3) = "2"
-
+ElseIf data(3) = "low" Then
+    data(3) = "1"
+ElseIf data(3) = "medium" Then
+    data(3) = "2"
+ElseIf data(3) = "high" Then
+    data(3) = "3"
 End If
 
 If data(4) = "" Then 'ttype
@@ -146,6 +151,8 @@ ElseIf data(4) = "system" Then
     data(4) = "10"
 ElseIf data(4) = "other" Then
     data(4) = "11"
+ElseIf data(4) = "cgi" Then
+	data(4) = "9"
 End If
 
 If data(5) = "" Then 'os

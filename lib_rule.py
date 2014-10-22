@@ -29,10 +29,10 @@ bdfanyi_heads={"Host":"fanyi.baidu.com",
                "Connection":"keep-alive",
                "Cache-Control":"no-cache"}
 
-wcnvd=httplib2.Http()
-sf=httplib2.Http()
-wcve=httplib2.Http()
-wcnnvd=httplib2.Http()
+#wcnvd=httplib2.Http()
+#sf=httplib2.Http()
+#wcve=httplib2.Http()
+#wcnnvd=httplib2.Http()
 
 class grule:
     def __init__(self):
@@ -160,14 +160,16 @@ class grule:
 
 
 
-def gethttpdata(url):
+
+def gethttp4urllib(url):
     rs=urllib2.urlopen(url)
     if rs and rs.getcode()==200:
         return rs.read()
     
-def getversion4bid(bid):
+def getversion4bid(bid,multi=0):
     url="http://www.securityfocus.com/bid/"+bid
     try:
+        sf=httplib2.Http()
         rp,con=sf.request(url)
         #con=gethttpdata(url)
         soup=BeautifulSoup(con)
@@ -181,6 +183,7 @@ def getversion4bid(bid):
         return "",""
     
 def getCNVD(cve):
+    wcnvd=httplib2.Http()
     body="&condition=1&causeIdStr=&threadIdStr=&serverityIdStr=&positionIdStr=&keyword=&keywordFlag=0&cnvdId=&cnvdIdFlag=0&baseinfoBeanbeginTime=&baseinfoBeanendTime=&baseinfoBeanFlag=0&refenceInfo="+cve+"&referenceScope=1&manufacturerId=-1&categoryId=-1&editionId=-1"
     url="http://www.cnvd.org.cn/flaw/listResult"
     try:
@@ -201,7 +204,7 @@ def searchdesc4soup(ss):
             return s('td')[1].contents
     return None
 
-def getdesc4cnvd(cnvd):  
+def getdesc4cnvd(cnvd):
     url="http://www.cnvd.org.cn/flaw/show/CNVD-"+cnvd
     try:
         wcnvd=httplib2.Http()
@@ -346,6 +349,7 @@ def transen2zh(en=None,encode='utf-8'):
         return None
     
 def getdesc4bid(bid):
+    sf=httplib2.Http()
     url="http://www.securityfocus.com/bid/"+bid+"/discuss" 
     try:
         rp,con=sf.request(url)
@@ -374,9 +378,10 @@ def getbid4link(link):
     return ""
 
 def getdesc4cve(cve):
+    http=httplib2.Http()
     url="http://www.cve.mitre.org/cgi-bin/cvename.cgi?name="+cve
     try:
-        rp,con=sf.request(url)
+        rp,con=http.request(url)
         soup=BeautifulSoup(con)
         rs=soup.find('table',width="100%",border="0",cellspacing="0",cellpadding="0")
         edesc=rs('tr')[3]('td')[0].contents[0]
@@ -460,6 +465,7 @@ def getCNNVD(cve):
     if len(soup.find('div',{"class":"dispage"}).contents[0])<10:
         return None
     '''
+    wcnnvd=httplib2.Http()
     head,body=wcnnvd.request("http://www.cnnvd.org.cn/vulnerability/index/cnnvdid2/CVE-"+cve)
     index=body.find('>CNNVD')
     if index<=0:

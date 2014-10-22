@@ -11,7 +11,7 @@ import re
 #1 create general rule from rule data file
 #2 get information from internet or packet file
 argvs={"-f":"","-cid":666666,"-work":"1","-gcnvd":0,"-gversion":0,"-gdesc":0,\
-       "-tran":0,"-debug":0,'-gmsg':0,'-gbid':0,'-gauto':0,"-admin":0,"-multi":0,\
+       "-tran":0,"-debug":0,'-gmsg':0,'-gbid':0,'-gauto':0,"-admin":0,"-multi":1,\
        "-desc":"desc","-msg":"msg","-see":"see","-version":"version","-cve":"cve","-cnnvd":"cnnvd",\
       "-bid":"bid","-cnvd":"cnvd","-sip":"sip","-sport":"sport","-dip":"dip","-type":"type","-flow":"flow","-protocol":"protocol",\
       "-dport":"dport","-solve":"solve","-sid":"sid","-ename":"ename","-body":"body","-tid":"tid","-cname":"cname"}
@@ -328,9 +328,6 @@ def opera(func):
     f=argvs['-f']
     f=open(f,'r')
     srule=None
-    threadpool=None
-    if argvs['-multi']>1:
-        threadpool=lib_TheardPool.threadpool(argvs['-multi'])
     lnum=0
     for line in f:
         lnum+=1
@@ -338,7 +335,7 @@ def opera(func):
             continue
         if line[0]=="@":
             if srule:
-                if threadpool:
+                if argvs['-multi']>1:
                     threadpool.addtask(func,(srule,))
                 else:
                     func(srule)
@@ -406,7 +403,11 @@ def outdata(rinstan):
     while rinstan.msg in gmsg:
         rinstan.msg=rinstan.msg+str(random.randint(1,9))
     gmsg.append(rinstan.msg)
-    print rinstan.msg.decode('utf8')
+    try:
+        print rinstan.msg.decode('utf8')
+    except Exception:
+        print rinstan.msg
+    
     ofile.write("@%d==========================================\n" %len(gmsg))
     if rinstan.body:
         line="body:"+rinstan.body+"\n"
@@ -520,8 +521,11 @@ def opera_crule(rinstan):
     if (argvs['-gauto'] or argvs['-gmsg']) and rinstan.msg=="":
         if rinstan.cname:
             rinstan.msg=rinstan.cname
-        else:
+        elif rinstan.ename:
             rinstan.msg=rinstan.ename
+        elif rinstan.bid:
+            ename,version=lib_rule.getversion4bid(rinstan.bid)
+            rinstan.msg=ename
     if argvs['-tran'] or argvs['-gauto']:
         if argvs['-tran'] or (not rinstan.cnvd):
             if rinstan.desc:
@@ -543,9 +547,9 @@ while i<len(sys.argv):
     try:
         keys.index(sys.argv[i])
         pl=setparameter(sys.argv[i],i)
-        i+=pl
     except Exception:
         print "parameter is error,again!!!"
+    i+=pl
 if argvs['-work']=='1':
     ofile=argvs['-f']+".grule"
 elif argvs['-work']=='2':
@@ -554,7 +558,11 @@ else:
     print "work model error,again..."
     exit(1)
 ofile=open(ofile,'w')
+threadpool=lib_TheardPool.threadpool(tmax=argvs['-multi'],debug=argvs['-debug'],start=False)
 opera(opera_crule)
+if argvs['-multi']>1:
+    threadpool.start()
+    threadpool.waitPoolComplete()
 ofile.close()
 print len(gobject)
 

@@ -2,36 +2,63 @@ import threading
 import sys
 import time
 import Queue
+
+#=============================================================================
+class threadtask(threading.Thread): #The timer class is derived from the class threading.Thread  
+    def __init__(self):  
+        threading.Thread.__init__(self)  
+        self.flag="mypool_task"
+        self.func=None
+        self.args=None
+    def settask(self,func,args):
+        self.func=func
+        self.args=args
+   
+    def run(self): #Overwrite run() method, put what you want the thread do here  
+        self.func(*self.args)
+            
 ########################################################################
 class threadpool(threading.Thread):
 
     #----------------------------------------------------------------------
-    def __init__(self,tmax=20,invrt=1,overact=None,start=True):
+    def __init__(self,tmax=20,invrt=1,overact=None,start=True,tasks=0,debug=0):#,taskclass=threadtask):
         threading.Thread.__init__(self)
         self.queue=Queue.Queue()
         self.threads=[None]*tmax
+        #self.threads=[taskclass()]*tmax
         self.tmax=tmax
         self.invrt=invrt
+        self.tasks=tasks
+        self.currentasks=0
         self.overact=overact
+        self.debug=debug
+        self.stop=False
         if start:
             self.start()
         
     def run(self):
         while True:
             try:
-                func,args=self.queue.get(timeout=1)
+                if self.tasks>0 and self.currentasks>=self.tasks:
+                    print "\nspecify task number is complete!!!"
+                    break
+                func,args=self.queue.get(timeout=3)
                 slot=self.getthreadslot()
                 self.starttask(slot,func,args)
+                self.currentasks+=1
+                if self.debug:
+                    print self.currentasks
             except Queue.Empty:
                 print "\nThread Pool is empty"
-                print "Wait subthread complete..."
-                self.waitcomplete()
-                if self.overact:
-                    self.overact[0](self.overact[1])
-                exit(0)
-                #return
+                break
+        print "Wait all subthread complete..."
+        self.waitcomplete()
+        if self.overact:
+            self.overact[0](self.overact[1])
+            #exit(0)
+        print "This Progame is over sussfully!!!"
+        self.stop=True
         
-            
     def getthreadslot(self):
         while True:
             for i in range(self.tmax):
@@ -42,10 +69,13 @@ class threadpool(threading.Thread):
             time.sleep(self.invrt)
             
     def starttask(self,slot,func,args):
+        #self.threads[slot].settask(func,args)
+        #self.threads[slot].start()
+        #====================
         self.threads[slot]=threading.Thread(target=func,args=args)
         self.threads[slot].start()
-        #print self.threads[slot].getName()[7:],
-        print "=",
+        if self.debug:
+            print '=',self.threads[slot].getName()
     def addtask(self,func,args):
         self.queue.put((func,args))
     
@@ -53,6 +83,13 @@ class threadpool(threading.Thread):
         for t in self.threads:
             if isinstance(t,threading.Thread) and t.isAlive():
                 t.join()
+    def waitPoolComplete(self):
+        while not self.stop:
+            time.sleep(1)
+########################################################################
+
+
+  
                     
         
                 
