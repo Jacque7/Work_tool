@@ -281,6 +281,8 @@ class rule:
             self.cname=data
         elif type=="flow":
             self.flow=data
+        elif type=="see" or type=="other":
+            self.see=data
         return
     
 def setparameter(para,i):
