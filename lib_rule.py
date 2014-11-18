@@ -272,7 +272,7 @@ def getidmsg4rule(line):
     f=line.find("\"",s+5)
     msg=line[s+5:f]
     s1=findspit(line,'sid:',f)
-    s2=findspit(line,'sid:',f)
+    s2=findspit(line,'tid:',f)
     s=max(s1,s2)
     f=line.find(";",s+4)
     sid=line[s+4:f]

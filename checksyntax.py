@@ -130,7 +130,7 @@ def check_body(body):
     i=1
     cur=1
     if body[-2:]!=';)':
-        printmsg("';)' is must,invaild rule body,loss right bracket or have blank at %d" %len(body)-2)
+        printmsg("';)' is must,invaild rule body,loss right bracket or have blank at %d" %(len(body)-2))
         return 0
     while i<len(body):
         if body[i]==';':
@@ -220,7 +220,7 @@ if len(sys.argv)<2:
     print "-------------------------"
     print "Author: Guo Guisheng"
     print "Date: 2014/07/05"
-    print "Version:2.1"
+    print "Version:2.2"
     print "User: checksyntax.py path mode"
     print "path1: The path of file for rule"
     print "mode : They are could be '-drsi' "

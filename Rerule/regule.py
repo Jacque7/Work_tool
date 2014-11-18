@@ -1,9 +1,10 @@
-
+#coding=gbk
 import os
 import sys
 import re
-import lib_pickle
 
+reid=re.compile(r'\d+-?\d*')
+idnames=('cve','cnnvd','bid','cnvd')
 class drule:
     def __init__(self):
         self.flag=0
@@ -22,10 +23,11 @@ class drule:
         
     def __eq__(self,obj):
         if not isinstance(obj,drule):
-            print "Error in eq!"
+            #print "Error in eq!"
             return False
         if len(self.body)!=len(obj.body):
             return False
+        '''
         for k,v in self.body.items():
             try:
                 if obj.body[k]!=v:
@@ -33,35 +35,70 @@ class drule:
             except Exception:
                 return False
         return True
+        '''
+        return self.body==obj.body
     
     def getbody(self):
         body=''
-        for k,v in self.body:
-            if v:
-                body+=(k+':'+v+'; ')
+        for v in self.body:
+            if isinstance(v,tuple):
+                body+=(v[0]+':'+v[1]+'; ')
             else:
-                body+=(k+'; ')
+                body+=(v+'; ')
         return body
     
-    def getinfo(self,s):
-        if s:
-            if self.rmeta[s]:
-                return self.rmeta[s]
+    
+    def getinfo(self,key):
+        if key:
+            if self.meta[1][key] and self.meta[1][key]!='""':
+                return self.meta[1][key]
             else:
-                return self.dmeta[s]
+                rs=self.meta[0][key]
+                if rs=='""':
+                    return None
+                else:
+                    return rs
+                
         return ''
     
     def getrule(self,flag=0):
-        if flag!=self.flag and self.flag!=2:
+        if flag==1 and self.flag==0:
             return ''
         head=self.getinfo('head')
         msg=self.getinfo('msg')
-        classtype=self.getinfo('classtype')
+        classtype=self.getinfo('classtype-danger')
         rev=self.getinfo('rev')
         body=self.getbody()
-        return "%s (msg:\"%s\"; %sclasstype:%s; tid:%s; rev:%s;)" %(head,msg,body,classtype,tid,rev)
+        return "%s(msg:%s; %sclasstype-danger:%s; tid:%s; rev:%s;)" %(head,msg,body,classtype,self.tid,rev)
+    
+    def writeinfo(self,outfile,flag=0):
+        if flag==1 and self.flag==0:
+            return ''
+        outfile.write('@==========================\n')
+        precise=self.getinfo('precise')
+        atype=self.getinfo('atype')
+        vos=self.getinfo('os')
+        block=self.getinfo('block')
+        pop=self.getinfo('pop')
+        risk=self.getinfo('risk')
+        ttype=self.getinfo('ttype')
+        s='tid:%s\nprecise:%s\nos:%s\nblock:%s\npop:%s\nrisk:%s\nttype:%s\n' %(self.tid,precise,vos,block,pop,risk,ttype)
+        outfile.write(s)
+        p=('msg','cve','bid','cnvd','cnnvd','desc','version','solve','see','ename','atype')
+        for k in p:
+            v=self.getinfo(k)
+            if v:
+                if v[0]=='"' and v[-1]=='"':
+                    v=v[1:-1]
+                if k in idnames:
+                    m=reid.search(v)
+                    if m:
+                        v=m.group()
+                    else:
+                        v=''
+                outfile.write('%s:%s\n' %(k,v))
             
-def regule(infile,outfile=None,head=False,split=',',sep='"',cols=18):
+def regule(infile,outfile=None,head=False):
     if not os.path.isfile(infile):
         print "it is invaild file"
         exit(1)
@@ -71,7 +108,7 @@ def regule(infile,outfile=None,head=False,split=',',sep='"',cols=18):
     ifile=open(infile)
     ofile=open(outfile,'w')
     if head:ifile.readline()
-    ree=re.compile(r'^\d{5,8},')
+    ree=re.compile(r'^\d{5,8}\$')
     for line in ifile:
         if ree.match(line):
             ofile.write('\n')
@@ -81,25 +118,73 @@ def regule(infile,outfile=None,head=False,split=',',sep='"',cols=18):
     ofile.close()
     ifile.close()
 
+lre=re.compile(r'^(\d{5,8})\$(\d)\$(\d)\$(\d)\$(\d{1,2})\$(\d)\$(\d)\$\"(.*)\"\$(.*)\$(.*)\$(\".*\"|)\$(\".*\"|)\$(\".*\"|)\$(\".*\"|)\$(\".*\"|)\$(\".*\"|)\$(.*)\$(.*)')
 
-
-lre=re.compile(r'(\d{5,8}),(\d),(\d),(\d),(\d{1,2}),(\d),(\d),\"(.*)\",(.*),(.*),(\".*\"|),(\".*\"|),(\".*\"|),(\".*\"|),(\".*\"|),(\".*\"|),(.*),(.*)')
+def mysplit(line):
+    rs=[]
+    i=0
+    l=len(line)
+    f=0
+    while True:
+        if f:
+            e=line.find('",',i)
+            f=0
+            if e==-1:
+                f=2
+                e=line.find('"',i)  
+        else:
+            e=line.find(',',i)
+        
+        if e==i:
+            rs.append('')
+            i=e+1
+        else:
+            if line[e]=='"':
+                rs.append(line[i:e+1])
+                i=e+2
+            else:   
+                rs.append(line[i:e])
+                i=e+1
+        if i==l:
+            rs.append('')
+            break
+        if f==2:
+            break
+        if line[i]=='"':
+            f=1
+    if len(rs)!=18:
+        print line
+    return rs
 
 def getvalues(line):
     line=line.strip()
     if not line:
         return 
-    lt=line.split(',')    
+    lt=line.split('$')
     if len(lt)!=18:
+        #return mysplit(line)
+        
         m=lre.match(line)
         if not m:
             print line
             return None
         else:
             return m.groups()
+        
     else:
         return lt
-    
+def getinfo4table(ifile):
+    if not os.path.isfile(ifile):
+        print "it is a invaild file"
+        exit(1)
+    infodict={}
+    for line in open(ifile):
+        line=line.strip()
+        if line:
+            lt=getvalues(line)
+            infodict[lt[0]]=lt[1:]
+    return infodict
+
 def anaysisrule(lrule,flag=0):
     dr=drule()
     i=1
@@ -112,6 +197,7 @@ def anaysisrule(lrule,flag=0):
     if index_h<=0:
         print("'(msg' is must,this is a invaild rule")
         return 
+    dr.meta[flag]['head']=lrule[:index_h]
     body=lrule[index_h:]
     while i<len(body):
         if body[i]==';':
@@ -192,6 +278,6 @@ def anasis(frule,flag=0):
     return rulelist
     #lib_pickle.dump2file(out,rulelist)
     
-anasis("F:\\Work\\rerule\\debug\\ips-v2014.10.09.rules")
+
                 
         
