@@ -2,11 +2,9 @@ import os
 import sys
 import lib_pickle
 import regule
-<<<<<<< HEAD
 import shutil
-=======
 
->>>>>>> origin/master
+
 def cast_info_rule(rulelist,infodict,flag=0):
     for rule in rulelist:
         values=infodict.pop(rule.meta[flag]['tid'])
@@ -102,7 +100,7 @@ def setdrule(rulelist):
         rlist.append(rule)
     print len(rulelist),len(rlist)
     return rlist
-<<<<<<< HEAD
+
 def mapoldnew(alllist,outfile='tidmap.txt'):
     outfile=open(outfile,'w')
     outfile.write('MSG\tTID\tOLD_DEBUG\tOLD_RELEASE\n')
@@ -133,7 +131,6 @@ def mvpkt(alllist,p='F:\\Work\\rerule\\pkt'):
 '''
 =======
 
->>>>>>> origin/master
 r_rulelist=regule.anasis("F:\\Work\\rerule\\release\\ips-v2014.11.12.rules",1)
 #r_rulelist=setdrule(r_rulelist)
 d_rulelist=regule.anasis("F:\\Work\\rerule\\debug\\ips-v2014.10.09.rules")
@@ -155,11 +152,9 @@ lib_pickle.dict2txt('d_overinfo.txt',d_infodict)
 #d_rulelist=lib_pickle.get4file('d_rulelist.pkl')
 #r_rulelist=lib_pickle.get4file('r_rulelist.pkl')
 allrule=lib_pickle.get4file('all_rulelist.pkl')
-<<<<<<< HEAD
 #mapoldnew(allrule)
 mvpkt(allrule)
-=======
->>>>>>> origin/master
+
 #print len(d_rulelist),len(r_rulelist),len(allrule)
 '''
 allrule=cast_debug_release(d_rulelist,r_rulelist)
@@ -173,8 +168,7 @@ dumpnewrule(allrule,'release_ips.rules','release_info.txt',1)
 
 lib_pickle.dump2file('all_rulelist.pkl',allrule)
 relen(allrule)
-<<<<<<< HEAD
-=======
+
 
 '''
 d_infodict=lib_pickle.get4file('d_overinfo.pkl')
@@ -183,7 +177,6 @@ d_rulelist=lib_pickle.get4file('d_rulelist.pkl')
 r_rulelist=lib_pickle.get4file('r_rulelist.pkl')
 print r_rulelist[1]
 '''
->>>>>>> origin/master
 
 
 d_infodict=lib_pickle.get4file('d_overinfo.pkl')
