@@ -6,7 +6,7 @@ def getaskname(path):
     names=[]
     for line in open(path):
         name=line.strip()
-        if name[0]!='#' and len(name)>10:
+        if name[0]!='#' and len(name)>5:
             names.append(name)
     return names
 '''
@@ -26,19 +26,23 @@ def getvinfo(vinfo):
 '''
 def getvlist(path):
     vlist={}
+    i=0
     for line in open(path):
+        i+=1
         vinfo=line.strip()
         if vinfo[0]!='#' and len(vinfo)>10:
-            vinfos=vinfo.split('\t')
-            key=vinfos[1][:vinfos[1].find('(')].strip()
+            vinfos=vinfo.split(',')
+            key=vinfos[0][:vinfos[0].find('(http')].strip()
             if key[0]=='\'' or key[0]=='\"':
                 key=key[1:]
-            vid=getid(vinfos[3])
+            vid=getid(vinfos[2])
             ipt=getipt(vinfos[-1])
             if vlist.get(key):
                 #print key,vlist[key]
                 continue
+            key=wincorrect(key)
             vlist[key]=(vid,ipt)
+    print len(vlist),i
     return vlist
 
 
@@ -69,12 +73,13 @@ def wincorrect(name):
 
 def myfilter(vname,pname,oname,ip,port):
     vname=wincorrect(vname)
+    oname='packet/pp/'+vname+'.pcap'
     if not os.path.isdir('packet/'+vname):
         os.mkdir('packet/'+vname)
     cmd='windump -s 0 -w \"%s\" -r %s host %s' %(oname,pname,ip)
     if port:
         cmd+=' and port '+port
-    #print cmd
+    print cmd
     os.system(cmd)
 
 def getvfile(dd):
@@ -86,7 +91,7 @@ def getvfile(dd):
         if ext=='.vlist':
             if os.path.isfile(dd+'/'+name+'.pcap'):
                 return name
-            print "Have not exist pcap in %d" %dd
+            print "Have not exist pcap in %s" %dd
             
 def print2grule(ename,cve,bid):
     grule.write('ename:%s\n' %ename)
@@ -98,7 +103,7 @@ def print2grule(ename,cve,bid):
     
 if len(sys.argv)<3:
     print "USE: filterpcap dir task"
-    print "dir: packet directory"
+    print "dir: work directory"
     print "tesk: task file"
     exit(1)
 if not (os.path.isdir(sys.argv[1]) and os.path.isfile(sys.argv[2])):
@@ -120,8 +125,10 @@ for d in os.listdir(os.getcwd()):
     if not name:
         continue
     vlist=getvlist(d+'/'+name+'.vlist')
+    i=0
     for vname in vnames:
         if vlist.get(vname):
+            vname=wincorrect(vname)
             myfilter(vname,d+'/'+name+'.pcap','packet/'+vname+'/'+name+'.pcap',vlist[vname][1][0],vlist[vname][1][1])
         else:
             print vname

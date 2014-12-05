@@ -101,7 +101,7 @@ ElseIf Left(txtline, 1) <> "/" Then
     Case "cnvd"
         ri(17) = arr(1)
     Case "cnnvd"
-        ri(18) = arr(1)
+        ri(16) = arr(1)
 	Case "ename"
 		ri(15) = arr(1)
     End Select

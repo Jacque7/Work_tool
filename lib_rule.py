@@ -16,6 +16,8 @@ from bs4 import *
 import json
 import os
 import urllib2
+import re
+
 
 cnvd_heads={"Host":"www.cnvd.org.cn",
         "Accept":"text/html, */*",
@@ -471,4 +473,57 @@ def getCNNVD(cve):
     if index<=0:
         return None
     return body[index+7:body.find('<',index)]
+
+def parserule(line,ln=0):
+    rhead=re.compile(r"^(#TOPIDP )?(alert|drop|log|pass|activate) +(tcp|udp|ip|icmp) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+) +(->|<-|<>) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+)$",re.I)
+    line=line.strip()
+    if len(line)<3:
+        return None
+    index_h=line.find('(msg:')
+    if index_h<=0:
+        if ln>0:
+            print "Error rule in %d" %ln
+        return None
+    if line[-2:]!=';)':
+        if ln>0:
+            print("Error rule in %d" %ln)
+        return     
+    head=line[:index_h].strip()
+    body=line[index_h:].strip()
+    rs={}
+    m=rhead.match(head)
+    if not m:
+        if ln>0:
+            print("Error rule in %d" %ln)
+        return
+    rs['head']=m.groups()
+    rs['body']=[]
+    i=1
+    cur=1
+    while i<len(body):
+        if body[i]==';':
+            key=body[cur:i].strip()
+            #print key
+            i=i+1
+            cur=i
+            rs['body'].append(key)
+            continue
+        
+        if body[i]==':':
+            key=body[cur:i].strip()
+            j=i+1
+            while 1:
+                j=body.find(';',j)
+                if j>0 and body[j-1]=='\\':
+                    j+=1
+                    continue
+                break         
+            value=body[i+1:j].strip()
+            #print key,value
+            rs['body'].append((key,value))
+            i=j+1
+            cur=i
+            continue
+        i+=1
+    return rs
     
