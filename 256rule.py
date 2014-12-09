@@ -68,7 +68,9 @@ def rule256(prule,name,gid,flow):
     body=cvtprule(prule,name,gid,level,r,dt,cid,flow)
     out.write(head+" "+body+'\n')
 
-  
+if len(sys.argv)<2:
+    print "256rule.py rule"
+    exit()
 i=1
 rflowbit=re.compile(r'flowbits: *(is)?set *, *(\w*) *;')
 pp=os.path.split(sys.argv[1])
