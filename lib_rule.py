@@ -287,11 +287,13 @@ def getidmsg4rule(line):
     return sid,msg
     
 
-def getdata4line(line,brule=0):
+def getdata4line(line,flag=0): #1 return rule 2 filter flowbits:noalert
     if line[0]=="#":
-        if line[1:7]!='TOPIDP':
+        if line[1:7]=='TOPIDP' or line[1:7]=='TOPSEC':
+            pass
+        else:
             return
-    if line.find("flowbits:noalert;")>0:
+    if flag==2 and line.find("flowbits:noalert;")>0:
         return
     s=line.find("msg:");
     f=line.find("\"",s+5)
@@ -307,27 +309,31 @@ def getdata4line(line,brule=0):
     except Exception:
         print sid
         pass
-    if brule:
+    if flag==1:
         return sid,msg,line
     return sid,msg
 
-def getinfo4rule(path,brule=0):
+def getinfo4rule(path,flag=0):
     grule={}
     try:
         f=open(path,'r')
+        ls=0
         for i in f:
+            ls+=1
             i=i.strip()
             if len(i)==0:
                 continue
             if i[:7]=='include':
                 grule.update(getinfo4rule(i[8:].strip()))
                 continue
-            rp=getdata4line(i,brule)
+            rp=getdata4line(i,flag)
             if rp:
-                if brule:
+                if flag==1:
                     grule[rp[0]]=[rp[1],rp[2]]
                 else:
                     grule[rp[0]]=[rp[1]]
+            else:
+                print ls,i
     except Exception:
         print "have error in getinfo4rule"
     return grule

@@ -4,7 +4,7 @@ if "%1"=="" goto mymsg
 goto start%1
 
 :start-s
-snort -A console -c %snort%/etc/snort.conf -k none -l %snort%/log
+snort  -i 2 -A console -c %snort%/etc/snort.conf -k none -l %snort%/log
 goto end
 
 :start-flist
@@ -27,6 +27,14 @@ echo ssnort -s		start snort for stand for IDS
 echo ssnort -flist filename	start snort with file what have pcap file list
 echo ssnort -r pcapfile	start snort with pcap file
 echo ssnort -list "list"	start snort with list what space separate list string,like this "a.pcap b.pcap"
+goto end
+
+:start-etc
+notepad++ %snort%/etc/snort.conf
+goto end
+
+:start-edit
+notepad++ %snort%/ssnort.bat
 goto end
 
 :mymsg

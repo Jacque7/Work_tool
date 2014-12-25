@@ -52,6 +52,13 @@ ftpbounce
 asn1
 ack
 seq
+fast_pattern
+detection_filter
+ip.version
+tcp.option
+http.content_length
+ip.data
+ip.data_len
 classtype-danger
 msg /^\".*\"$/
 content /^!?\".*\"$/
@@ -70,6 +77,8 @@ isdataat /^!?\d+(,(relative|rawbytes))?$/
 flow /(^(to_server|to_client|from_client|from_server)(,?(established|not_established|stateless))?(,?(no_stream|only_stream))?$)|(^(established|not_established|stateless)(,?(to_server|to_client|from_client|from_server))?(,?(no_stream|only_stream))?$)/
 reference /^\w+(,[\d-]+)+$/
 flowbits /^(set|setx|unset|toggle|isset|isnotset|noalert|reset)(,.+){0,2}$/
-head /^(alert|drop|log|pass|activate) +(tcp|udp|ip|icmp) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+) +(->|<-|<>) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+)$/
+head /^(#TOP(IDP|SEC) )?(alert|drop|log|pass|activate) +(tcp|udp|ip|icmp) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+) +(->|<-|<>) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+)$/
 
 @uncompatibility http_method|ip\.version|ip\.data|ip\.data_len|http_cookie|file_data|http\.content_length|ftpbounce|asn1|http_raw_uri|tcp\.option|byte_extract|fast_pattern|http_header|detail|clipkt|serpkt|endtail|base64_decode|base64_data|datection_filter|pkt_data|ssl_state|http_stat_code|dce_iface|dce_opnum|dce_stub_data|stream_size|http_raw_header|sd_pattern|http_raw_cookie|http_stat_msg|http_encode|cvs|sip_header|sip_method|sip_stat_code|gtp_type|gtp_version|ssl_version|rpc|sameip|stream_reassemble
+
+@cvt wsdbWSDBatrvfnexu0pcAZG\$^*+[]{}()"'|/.?;

@@ -158,7 +158,7 @@ if args['-r']!='':
     if not os.path.isfile(args['-r']):
         print "%s is not exist,please input real path for rule file" %args['-r']
         exit(1)
-    grs=lib_rule.getinfo4rule(args['-r'])
+    grs=lib_rule.getinfo4rule(args['-r'],2)
     print "load numbers of rule:",len(grs)
     if len(grs):
         lib_pickle.dump2file(args['-p']+"/rule.pkl",grs)

@@ -5,8 +5,8 @@ import re
 def check_topidp(line):
     search=uncompatibility.search(line)
     if search:
-        if line[:7]!='#TOPIDP':
-            printmsg("contain uncompatibility key '%s' of rule that must have #TOPIDP in begin" %search.group())
+        if line[:7] not in ('#TOPIDP','#TOPSEC'):
+            printmsg("contain uncompatibility key '%s' of rule that must have #TOPIDP or #TOPSEC in begin" %search.group())
             return 0
     return 1
 
@@ -56,15 +56,60 @@ def syntax_regular(rs):
             print bracket_pair
         return 0
     return 1
+
+cvt=""
 def syntax_pcre(rs):
     match=re_pcre.match(rs)
     if not match:
         printmsg("pcre: struct error")
         return 0
+    ps=match.groups()[0]
+    
+    for i in range(len(ps)):
+        if ps[i]=='/':
+            if i==0:
+                printmsg("pcre: / must transform  to \\/ in %d" %i)
+            
+            elif i>0 and ps[i-1]!='\\':
+                printmsg("pcre: / must transform  to \\/")
+        if i>0 and ps[i-1]=='\\':
+            if ps[i] not in cvt:
+                printmsg("pcre: %s have unnecessary \\ in %d" %(ps[i],i))
+        
     if model&2:
-        return syntax_regular(match.groups()[0])
+        try:
+            re.compile(match.groups()[0])
+        except Exception:
+            return syntax_regular(match.groups()[0])
     else:
         return 1
+    
+    
+def syntax_content(rs):
+    num=0
+    rhex=re.compile(r'^([\dABCDEF]{2} )*[\dABCDEF]{2}$',re.I)
+    d1=rs.find('"')
+    d2=rs.rfind('"')
+    v=rs[d1+1:d2]
+    for i in v:
+        if i in (':',';','"','\\'):
+            printmsg("(uri)content: must have not \\  : ; \" in value")
+            return 0
+    while num<len(v):
+        a=v.find('|',num)
+        b=v.find('|',a+1)
+        if a>=0 and b>=0:
+            v=v[a+1:b]
+            if rhex.match(v):
+                num=b+1
+                continue
+            else:
+                printmsg("content: |hex| format is wrong")
+                return 0
+        else:
+            return 1
+    return 1
+
 
 def getregular(res):
     res=res.strip()
@@ -76,6 +121,7 @@ def getregular(res):
 
 def keysyntax(path):
     global uncompatibility
+    global cvt
     path=path+'\\key.syn'
     #path=""
     try:
@@ -101,12 +147,15 @@ def keysyntax(path):
             if 'uncompatibility' in globals():
                 uncompatibility=re.compile(lt[1].strip())
             continue
+        if key=='@cvt':
+            cvt=lt[1]
+            continue
         regular=getregular(lt[1])
         if not regular:
             print line,':syntax file error'
             return None
         try:
-            keys[key]=re.compile(regular,re.I)
+            keys[key]=re.compile(regular)#,re.I)
         except Exception:
             print line,':syntax file error'
             return None
@@ -210,7 +259,7 @@ def check_body(body):
 #re_head=re.compile(r'^ *(alert|drop|log|pass|activate) +(tcp|udp|ip|icmp) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+) +(->|<-|<>) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+) *$',re.I)
 
 keys=None
-syntax_builtin={'pcre':syntax_pcre}
+syntax_builtin={'pcre':syntax_pcre,'content':syntax_content,'uricontent':syntax_content}
 #re_content=re.compile(r'!? *\".*\"')
 #re_msg=re.compile(r'\".*\"')
 re_pcre=re.compile(r'!? *\"/(.*)/[ismxAEGRUBPHMCOIDKYS]*\"')
@@ -219,8 +268,8 @@ curline=0
 if len(sys.argv)<2:
     print "-------------------------"
     print "Author: Guo Guisheng"
-    print "Date: 2014/07/05"
-    print "Version:2.2"
+    print "Date: 2014/12/23"
+    print "Version:3.3"
     print "User: checksyntax.py path mode"
     print "path1: The path of file for rule"
     print "mode : They are could be '-drsi' "
@@ -259,7 +308,7 @@ if not keys:
     sys.exit()
 for line in f:
     curline+=1
-    if line[0]=='#':
+    if line[0]=='#' and line[1:4]!="TOP":
         continue
     rules+=1
     if model&1:

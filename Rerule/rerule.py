@@ -106,15 +106,25 @@ def mapoldnew(alllist,outfile='tidmap.txt'):
     outfile.write('MSG\tTID\tOLD_DEBUG\tOLD_RELEASE\n')
     for rule in alllist:
         if rule.meta[0]['tid']:
-            tids="%s\t%s\td:%s" %(rule.getinfo('msg'),rule.tid,rule.meta[0]['tid'])
+            tids="%s\t%s\t%s\td:%s" %(rule.getinfo('msg'),rule.getinfo('ename'),rule.tid,rule.meta[0]['tid'])
         else:
-            tids="%s\t%s\tNONE" %(rule.getinfo('msg'),rule.tid)
+            tids="%s\t%s\t%s\tNONE" %(rule.getinfo('msg'),rule.getinfo('ename'),rule.tid)
         if rule.meta[1]['tid']:
             tids+='\tr:%s\n' %rule.meta[1]['tid']
         else:
             tids+='\tNONE\n' 
         outfile.write(tids)
     outfile.close()
+
+def getmap(alllist):
+    maplist={}
+    for rule in alllist:
+        msg=rule.getinfo('msg').decode('gbk')
+        dtid=rule.meta[0]['tid']
+        rtid=rule.meta[1]['tid']
+        maplist[str(rule.tid)]=(msg,dtid,rtid)
+    return maplist
+
 def mvpkt(alllist,p='F:\\Work\\rerule\\pkt'):
     os.chdir(p)
     for rule in allrule:
@@ -127,7 +137,30 @@ def mvpkt(alllist,p='F:\\Work\\rerule\\pkt'):
                 else:
                     shutil.move(dtid+'.pcap','debug/%s.pcap' %rule.tid)
         
-    
+def getmappkt(f,codec='utf8'):
+    mpkt={}
+    for line in open(f):
+        v=line.strip().decode(codec).split(u'\t')
+        mpkt[v[0]]=v[1]
+    return mpkt
+
+def gettask(f,codec='utf8'):
+    tasks=[]
+    for line in open(f):
+        line=line.strip().decode(codec)
+        a=line.find(u':')
+        b=line.find(u';')
+        msg=line[a+2:b-1]
+        tid=line[-5:]
+        tasks.append((tid,msg))
+    return tasks
+
+def strcompress(s,t):
+    s=set([i for i in s])
+    t=set([i for i in t])
+    score=len(s&t)/len(s|t)
+    return score
+
 '''
 =======
 
@@ -151,11 +184,58 @@ lib_pickle.dict2txt('d_overinfo.txt',d_infodict)
 '''
 #d_rulelist=lib_pickle.get4file('d_rulelist.pkl')
 #r_rulelist=lib_pickle.get4file('r_rulelist.pkl')
+pkts=getmappkt('F:\\Work\\trule_modify_project\\allpkt.txt','gbk')
+c=False
+for line in open('F:\\Work\\trule_modify_project\\leave.txt'):
+    line=line.strip()
+    tid=line[:5]
+    name=line[6:].decode('gbk')
+    for k,v in pkts.items():
+        if strcompress(k,name)>0.8:
+            shutil.copy(v,'F:\\Work\\trule_modify_project\\pkt\\%s.pcap' %tid)
+            c=True
+            continue
+    if c:
+        c=False
+    else:
+        print tid,name
+        
+'''
+tasks=gettask('F:\\Work\\trule_modify_project\\ggs.txt','gbk')
 allrule=lib_pickle.get4file('all_rulelist.pkl')
+idmaps=getmap(allrule)
+
+c=0
+i=0
+n=0
+for t in tasks:
+    n+=0
+    msg=None
+    dtid=None
+    v=idmaps.get(t[0])
+    if v:
+        msg=v[0]
+        dtid=v[1]
+    v=pkts.get(t[0])
+    if v:
+        c+=1
+        shutil.copy(v,'F:\\Work\\trule_modify_project\\pkt\\%s.pcap' %t[0])
+        continue
+    if dtid:
+        v=pkts.get(dtid)
+        if v:
+            c+=1
+            shutil.copy(v,'F:\\Work\\trule_modify_project\\pkt\\%s.pcap' %t[0])
+            continue
+    i+=1
+    print t[0],t[1]
+print c,i,n
+'''
 #mapoldnew(allrule)
-mvpkt(allrule)
+#mvpkt(allrule)
 
 #print len(d_rulelist),len(r_rulelist),len(allrule)
+
 '''
 allrule=cast_debug_release(d_rulelist,r_rulelist)
 for i in range(len(allrule)):
@@ -168,7 +248,7 @@ dumpnewrule(allrule,'release_ips.rules','release_info.txt',1)
 
 lib_pickle.dump2file('all_rulelist.pkl',allrule)
 relen(allrule)
-
+'''
 
 '''
 d_infodict=lib_pickle.get4file('d_overinfo.pkl')
@@ -176,8 +256,6 @@ r_infodict=lib_pickle.get4file('r_overinfo.pkl')
 d_rulelist=lib_pickle.get4file('d_rulelist.pkl')
 r_rulelist=lib_pickle.get4file('r_rulelist.pkl')
 print r_rulelist[1]
-'''
-
 
 d_infodict=lib_pickle.get4file('d_overinfo.pkl')
 r_infodict=lib_pickle.get4file('r_overinfo.pkl')
