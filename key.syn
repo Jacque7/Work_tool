@@ -2,22 +2,64 @@
 #syntax file
 #author: guo guisheng
 #date:2014/07/04
+#email: guo_guisheng@topsec.com.cn
 #==================
 #format:key /regular_expression/
 #regular_expression is not necessary
 #key is necessary
 #if you use a keyword in you rules,you should append this key in current file
+
 #======================
 #具有强大自定义性和可扩展性的程序，对snort规则进行语法检查
 #列出你将使用的所有合法关键字，可以不给出具体的语法形式，即关键字使用语法的正则表达式可以忽略，当忽略时，不进行对应关键字的语法检查
 #使用了未列出的关键字，程序将对对应的规则报keywords nonexist错误
 ##号为注释符号
+#@cvt 后面字符代表在pcre的正则语法中，只有这些字符可以转义，其余无效转义符皆视为错误
+#@uncompatibility 后面关键字列表为不同版本不通用关键字，要求规则行首使用#TOPIDP 或#TOPSEC注释此功能可根据参数触发
 #keyword /正则表达式/ 
 #keyword和/正则表达式中间空格，正则表达式使用/.../标识，正则表达式语法与snort语法一致
 #若发现bug，联系本人
 metadata
 flags
 nocase
+replace
+count
+activate_by
+activates
+react
+resp
+session
+logto
+stream_reassemble
+sameip
+rpc
+ssl_version
+gtp_version
+gtp_info
+gtp_type
+sip_type
+sip_stat_code
+sip_method
+sip_body
+sip_header
+cvs
+http_encode
+gid
+sd_pattern
+stream_size
+dce_stub_data
+dce_opnum
+dce_iface
+pkt_data
+ssl_state
+base64_data
+base64_decode
+endtail
+serpkt
+clipkt
+detail
+byte_extract
+http.method
 rawbytes
 byte_test
 byte_jump
