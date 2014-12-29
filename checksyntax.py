@@ -2,13 +2,12 @@ import os
 import sys
 import re
 
-def check_topidp(line):
-    search=uncompatibility.search(line)
+def check_topidp(key):
+    search=uncompatibility.search(key)
     if search:
         if line[:7] not in ('#TOPIDP','#TOPSEC'):
             printmsg("contain uncompatibility key '%s' of rule that must have #TOPIDP or #TOPSEC in begin" %search.group())
-            return 0
-    return 1
+
 
 def requireV(v='2.7'):
     if sys.version[:3]!=v:
@@ -25,8 +24,6 @@ def check(line):
         return 0
     head=line[:index_h].strip()
     body=line[index_h:].strip()
-    if model&8:
-        check_topidp(line)
     return check_head(head)&check_body(body)
 
 def printmsg(msg,tp=0):
@@ -84,7 +81,13 @@ def syntax_pcre(rs):
     else:
         return 1
     
-    
+def syntax_msg(rs):
+    if rs[1]==' ' or rs[-2]==' ':
+        printmsg("msg: must have no blank in msg value")
+        return 0
+    else:
+        return 1
+
 def syntax_content(rs):
     num=0
     rhex=re.compile(r'^([\dABCDEF]{2} )*[\dABCDEF]{2}$',re.I)
@@ -190,7 +193,8 @@ def check_body(body):
                 print key
             try:
                 keys[key]
-                
+                if model&8:
+                    check_topidp(key)                
                 if body[i-1]==' ':
                     printmsg(key+"::have nonecessary blank before semicolon at %d" %i) #must no blank before semicolon
                     
@@ -209,6 +213,8 @@ def check_body(body):
             key=body[cur:i].strip()
             if model&1:
                 print key,
+            if model&8:
+                check_topidp(key)            
             try:
                 j=i+1
                 while 1:
@@ -259,7 +265,7 @@ def check_body(body):
 #re_head=re.compile(r'^ *(alert|drop|log|pass|activate) +(tcp|udp|ip|icmp) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+) +(->|<-|<>) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+) *$',re.I)
 
 keys=None
-syntax_builtin={'pcre':syntax_pcre,'content':syntax_content,'uricontent':syntax_content}
+syntax_builtin={'pcre':syntax_pcre,'content':syntax_content,'uricontent':syntax_content,'msg':syntax_msg}
 #re_content=re.compile(r'!? *\".*\"')
 #re_msg=re.compile(r'\".*\"')
 re_pcre=re.compile(r'!? *\"/(.*)/[ismxAEGRUBPHMCOIDKYS]*\"')
