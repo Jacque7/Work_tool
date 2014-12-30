@@ -6,17 +6,18 @@ Created on Wed Apr  9 22:31:25 2014
 """
 
 #python 2.7
-
-import httplib2
-
-#from BeautifulSoup import *
-import sys
-from bs4 import *
-#import impacket.pcapfile as ppf
-import json
-import os
-import urllib2
-import re
+try:
+    import httplib2
+    #from BeautifulSoup import *
+    import sys
+    from bs4 import *
+    #import impacket.pcapfile as ppf
+    import json
+    import os
+    import urllib2
+    import re
+except Exception:
+    pass
 
 
 cnvd_heads={"Host":"www.cnvd.org.cn",
@@ -481,7 +482,7 @@ def getCNNVD(cve):
     return body[index+7:body.find('<',index)]
 
 def parserule(line,ln=0):
-    rhead=re.compile(r"^(#TOPIDP )?(alert|drop|log|pass|activate) +(tcp|udp|ip|icmp) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+) +(->|<-|<>) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+)$",re.I)
+    rhead=re.compile(r"^(#(TOPIDP|TOPSEC) *)?(alert|drop|log|pass|activate) +(tcp|udp|ip|icmp) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+) +(->|<-|<>) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+)$",re.I)
     line=line.strip()
     if len(line)<3:
         return None

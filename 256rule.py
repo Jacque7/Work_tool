@@ -43,7 +43,7 @@ def cvtprule(prule,name,gid,level,r,dt,cid,fb):
             elif i[0]=='tid':
                 bodys+="%s:%s; " %(i[0],i[1])
                 bodys+="gid:%s; " %gid
-                bodys+="sid:260804%s%02d; " %(cid,fb)
+                bodys+="sid:260804%s%02d; " %(prule['body'][-2][1][1:],fb)
             elif i[0]=='rev':
                 bodys+='rev:%s%s%s;)' %(dt,level,r)
             else:
@@ -77,9 +77,36 @@ pp=os.path.split(sys.argv[1])
 out=open(pp[0]+'/'+pp[1]+'.56rules','w')
 err=open(pp[0]+'/err.log','a+')
 
+
+if len(sys.argv)>2 and sys.argv[2]=='-c':
+    r=re.compile('sid: *\d{12} *')
+    for line in open(sys.argv[1]):
+        line=line.strip()
+        if line:
+            prule=lib_rule.parserule(line,i)
+            tid=''
+            flow=''
+            for info in prule['body']:
+                if info[0]=='tid':
+                    tid=info[1].strip()[1:]
+                    #sid='sid:260804'+tid[1:]+'00'
+                    #continue
+                elif info[0]=='sid':
+                    flow=info[1].strip()[-2:]
+                    
+            if tid and flow and r.search(line):
+                sid="sid:260804"+tid+flow
+                new=r.sub(sid,line)
+                out.write(new+'\n')
+            else:
+                print line
+        i+=1
+    exit(0)
+                
 for line in open(sys.argv[1]):
     rs=geti4line(line,i)
     if rs:
+        '''
         m=rflowbit.search(rs[0])
         if m:
             k=m.groups()[1]
@@ -89,11 +116,12 @@ for line in open(sys.argv[1]):
                 flows[k]=[line.strip()]
             i+=1
             continue
+        '''
         prule=lib_rule.parserule(rs[0],i)
         rule256(prule,rs[1],rs[2],-1)
         i+=1
         
-
+'''
 for k,lines in flows.items():
     if len(lines)<2:
         err.write(lines[0]+'\n')
@@ -102,4 +130,5 @@ for k,lines in flows.items():
     for l in range(len(lines)):
         rs=geti4line(lines[l])
         prule=lib_rule.parserule(rs[0])
-        rule256(prule,rs[1],rs[2],l)    
+        rule256(prule,rs[1],rs[2],l)
+'''
