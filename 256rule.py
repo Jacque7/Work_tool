@@ -78,24 +78,52 @@ out=open(pp[0]+'/'+pp[1]+'.56rules','w')
 err=open(pp[0]+'/err.log','a+')
 
 
+
+if len(sys.argv)>2 and sys.argv[2]=='-r':
+    r=re.compile('msg:\".*?\";')
+    for line in open(sys.argv[1]):
+        line=line.strip()
+        if line:
+            prule=lib_rule.parserule(line,i)
+            nmsg=''
+            for info in prule['body']:
+                if info[0]=='msg':
+                    msg=lib_rule.mystrip(info[1])
+                    index=msg.find('-')
+                    if index>0:
+                        name=msg[:index].strip()
+                        title=msg[index+1:].strip()
+                        nmsg="msg:\"%s - %s\";" %(name,title)
+                    continue
+                  
+            if nmsg and r.search(line):
+                   #sid="sid:260804"+tid+'00'
+                new=r.sub(nmsg,line)
+                out.write(new+'\n')
+                nmsg=""
+            else:
+                print "Error in %d" %i,line
+        i+=1
+    exit(0)
+    
 if len(sys.argv)>2 and sys.argv[2]=='-c':
     r=re.compile('sid: *\d{12} *')
     for line in open(sys.argv[1]):
         line=line.strip()
         if line:
             prule=lib_rule.parserule(line,i)
-            tid=''
-            flow=''
+            sid=''
+            #flow=''
             for info in prule['body']:
                 if info[0]=='tid':
                     tid=info[1].strip()[1:]
-                    #sid='sid:260804'+tid[1:]+'00'
-                    #continue
-                elif info[0]=='sid':
-                    flow=info[1].strip()[-2:]
+                    sid='sid:260804'+tid+'00'
+                    continue
+                #elif info[0]=='sid':
+                #    flow=info[1].strip()[-2:]
                     
-            if tid and flow and r.search(line):
-                sid="sid:260804"+tid+flow
+            if sid and r.search(line):
+                #sid="sid:260804"+tid+'00'
                 new=r.sub(sid,line)
                 out.write(new+'\n')
             else:

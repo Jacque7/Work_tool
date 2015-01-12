@@ -200,6 +200,11 @@ def getCNVD(cve):
             return "",""
     except Exception:
         return "",""
+    
+def opencnvdurl(http,url):
+    h,b=http.request(url,headers=cnvd_heads)
+    if h['status']=='200':
+        return b
 
 def searchdesc4soup(ss):
     for s in ss:
@@ -207,7 +212,7 @@ def searchdesc4soup(ss):
             return s('td')[1].contents
     return None
 
-def getdesc4cnvd(cnvd):
+def getdesc4cnvd(cnvd,code='utf8',vid=False):
     url="http://www.cnvd.org.cn/flaw/show/CNVD-"+cnvd
     try:
         wcnvd=httplib2.Http()
@@ -217,14 +222,30 @@ def getdesc4cnvd(cnvd):
         rs=soup.find('table',{'class':"gg_detail"})
         rs=rs.find('tbody')
         rs=rs.findAll('tr')
+        if vid:
+            return getvidforsoup(rs,code)
         desc=""
         rs=searchdesc4soup(rs)
         for i in rs:
             if type(i)==type(cname):
                 desc+=i
-        return cname.encode('utf8'),clearstr(desc).encode('utf8')
+        return cname.encode(code),clearstr(desc).encode(code)
     except Exception:
         return "",""
+
+def getvidforsoup(soups,code='utf8'):
+    bid='NULL'
+    cve='NULL'
+    for soup in soups:
+        if soup.td.contents[0]=='BUGTRAQ ID':
+            v=soup('td')[1].a.contents[0].strip()
+            if v:bid=v
+        elif soup.td.contents[0]=='CVE ID':
+            v=soup('td')[1].a.contents[0].strip()
+            if v:cve=v
+    if cve!='NULL':
+        cve=cve[4:]
+    return cve.strip().encode(code),bid.strip().encode(code)
 
 def getpacket4file(fname,func):
     f=ppf.PcapFile(fname)
@@ -386,7 +407,7 @@ def getbid4link(link):
         l-=1
     return ""
 
-def getdesc4cve(cve):
+def getdesc4cve(cve,code='utf8'):
     http=httplib2.Http()
     url="http://www.cve.mitre.org/cgi-bin/cvename.cgi?name="+cve
     try:
@@ -401,7 +422,7 @@ def getdesc4cve(cve):
             if i['href'].find("www.securityfocus.com/bid/")>=0:
                 bid=getbid4link(i['href'])
                 break
-        return bid.encode('utf8'),edesc.encode('utf8')
+        return bid.encode(code),edesc.encode(code)
     except Exception:
         return "",""
     
@@ -533,4 +554,9 @@ def parserule(line,ln=0):
             continue
         i+=1
     return rs
-    
+
+def mystrip(s):
+    if s[0]==s[-1]=='"' or s[0]==s[-1]=="'":
+        return s[1:-1].strip()
+    else:
+        return s.strip()

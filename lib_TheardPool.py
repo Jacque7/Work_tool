@@ -35,12 +35,14 @@ class threadpool(threading.Thread):
         self.stop=False
         if start:
             self.start()
-        
+
     def run(self):
         while True:
             try:
                 if self.tasks>0 and self.currentasks>=self.tasks:
                     print "\nspecify task number is complete!!!"
+                    break
+                if self.stop:
                     break
                 func,args=self.queue.get(timeout=3)
                 slot=self.getthreadslot()
@@ -86,6 +88,13 @@ class threadpool(threading.Thread):
     def waitPoolComplete(self):
         while not self.stop:
             time.sleep(1)
+        self.waitcomplete()
+        
+    def setstop(self):
+        self.stop=True
+        
+    def setstart(self):
+        self.stop=False
 ########################################################################
 
 

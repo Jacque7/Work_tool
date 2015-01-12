@@ -117,7 +117,7 @@ dsize /^(\d+<>\d+)|((<|>)?\d+)$/
 urilen /^(\d+[<>]\d+(,(norm|raw))?)|([<|>]\d+(,(norm|raw))?)|(\d+)$/
 isdataat /^!?\d+(,(relative|rawbytes))?$/
 flow /(^(to_server|to_client|from_client|from_server)(,?(established|not_established|stateless))?(,?(no_stream|only_stream))?$)|(^(established|not_established|stateless)(,?(to_server|to_client|from_client|from_server))?(,?(no_stream|only_stream))?$)/
-reference /^\w+(,[\d-]+)+$/
+reference /^\w+(,[\d\w-]+)+$/
 flowbits /^(set|setx|unset|toggle|isset|isnotset|noalert|reset)(,.+){0,2}$/
 head /^(#TOP(IDP|SEC) )?(alert|drop|log|pass|activate) +(tcp|udp|ip|icmp) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+) +(->|<-|<>) +(any|[!\d\.]+|\x24.+) +(any|[!\[\]:,\d]+|\x24.+)$/
 

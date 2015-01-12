@@ -181,6 +181,17 @@ def check_head(head):
 def check_body(body):
     i=1
     cur=1
+    status=0 
+    # xxxxx status within distance depth offset
+    #10000=16
+    #10011=19
+    #11100=28
+    #10010=18
+    #10001=17
+    #11000=24
+    #10100=20 
+    statv=('offset','depth','distance','within')
+    statc=(16,19,28,18,17,24,20)
     if body[-2:]!=';)':
         printmsg("';)' is must,invaild rule body,loss right bracket or have blank at %d" %(len(body)-2))
         return 0
@@ -194,7 +205,7 @@ def check_body(body):
             try:
                 keys[key]
                 if model&8:
-                    check_topidp(key)                
+                    check_topidp(key)        
                 if body[i-1]==' ':
                     printmsg(key+"::have nonecessary blank before semicolon at %d" %i) #must no blank before semicolon
                     
@@ -248,6 +259,17 @@ def check_body(body):
                 except IndexError:
                     pass
                 
+                if (not status) and (key in ('uricontent','content')):
+                    status=16
+                elif status:
+                    if key in statv:
+                        index=statv.index(key)
+                        status=status|(1<<index)
+                    else:
+                        if status not in statc:
+                            printmsg("offset depth distance within is error before %s" %key)
+                        status=0
+                        
                 if key in syntax_builtin.keys():
                     if not syntax_builtin[key](rs):
                         return 0                
@@ -275,7 +297,7 @@ if len(sys.argv)<2:
     print "-------------------------"
     print "Author: Guo Guisheng"
     print "Date: 2014/12/23"
-    print "Version:3.3"
+    print "Version:3.8"
     print "User: checksyntax.py path mode"
     print "path1: The path of file for rule"
     print "mode : They are could be '-drsi' "
