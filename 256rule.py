@@ -72,7 +72,7 @@ if len(sys.argv)<2:
     print "256rule.py rule"
     exit()
 i=1
-rflowbit=re.compile(r'flowbits: *(is)?set *, *(\w*) *;')
+rflowbit=re.compile(r'flowbits: *(is|un)?set *, *(\w+?) *(;|,)')
 pp=os.path.split(sys.argv[1])
 out=open(pp[0]+'/'+pp[1]+'.56rules','w')
 err=open(pp[0]+'/err.log','a+')
@@ -132,10 +132,9 @@ if len(sys.argv)>2 and sys.argv[2]=='-c':
     exit(0)
                 
 for line in open(sys.argv[1]):
-    rs=geti4line(line,i)
-    if rs:
-        '''
-        m=rflowbit.search(rs[0])
+    #rs=geti4line(line,i)
+    if line.strip():
+        m=rflowbit.search(line.strip())
         if m:
             k=m.groups()[1]
             if flows.get(k):
@@ -144,19 +143,19 @@ for line in open(sys.argv[1]):
                 flows[k]=[line.strip()]
             i+=1
             continue
-        '''
-        prule=lib_rule.parserule(rs[0],i)
-        rule256(prule,rs[1],rs[2],-1)
+        
+        #prule=lib_rule.parserule(rs[0],i)
+        #rule256(prule,rs[1],rs[2],-1)
         i+=1
         
-'''
+
 for k,lines in flows.items():
     if len(lines)<2:
-        err.write(lines[0]+'\n')
+        out.write('#error=====\n')
+        out.write(lines[0]+'\n')
         continue
     cid+=1
-    for l in range(len(lines)):
-        rs=geti4line(lines[l])
-        prule=lib_rule.parserule(rs[0])
-        rule256(prule,rs[1],rs[2],l)
-'''
+    out.write('#groups===========\n')
+    for l in lines:
+        out.write(l+'\n')
+        

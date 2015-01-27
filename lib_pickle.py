@@ -12,23 +12,32 @@ def dump2file(path,obj,type=None):
     pickle.dump(obj, output,type) 
     output.close()
     
-def dict2txt(path,obj):
+def dict2txt(path,obj,act='w',sep=','):
     if not isinstance(obj,dict):
         print "input is not vaild"
         return
-    output=open(path,'w')
+    output=open(path,act)
     for k,v in obj.items():
-        v=','.join(v)
-        output.write(k+':'+v+'\n')
+        v=sep.join(v)
+        try:
+            output.write(k+':'+v+'\n')
+        except UnicodeDecodeError:
+            k=k.decode('utf8')
+            output.write((k+':'+v+'\n').encode('gbk'))
     output.close()
     
-def list2txt(path,obj):
+def list2txt(path,obj,act='w',sep=','):
     if not isinstance(obj,list):
         print "input is not vaild"
         return    
-    output=open(path,'w')
+    output=open(path,act)
     for i in obj:
-        v=','.join(i)
+        try:
+            v=sep.join(i)
+        except UnicodeDecodeError:
+            i=list(i)
+            i[1]=i[1].decode('utf8')
+            v=(sep.join(i)).encode('gbk')
         output.write(v+'\n')
     output.close()
 

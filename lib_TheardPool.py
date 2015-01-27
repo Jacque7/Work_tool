@@ -2,7 +2,7 @@ import threading
 import sys
 import time
 import Queue
-
+import httplib2
 #=============================================================================
 class threadtask(threading.Thread): #The timer class is derived from the class threading.Thread  
     def __init__(self):  
@@ -21,7 +21,7 @@ class threadtask(threading.Thread): #The timer class is derived from the class t
 class threadpool(threading.Thread):
 
     #----------------------------------------------------------------------
-    def __init__(self,tmax=20,invrt=1,overact=None,start=True,tasks=0,debug=0):#,taskclass=threadtask):
+    def __init__(self,tmax=20,invrt=1,overact=None,start=True,tasks=0,debug=0,ishttp=False):#,taskclass=threadtask):
         threading.Thread.__init__(self)
         self.queue=Queue.Queue()
         self.threads=[None]*tmax
@@ -33,6 +33,11 @@ class threadpool(threading.Thread):
         self.overact=overact
         self.debug=debug
         self.stop=False
+        self.ishttp=ishttp
+        self.limit=0
+        self.wait=False
+        if self.ishttp:
+            self.https=[httplib2.Http(timeout=10) for i in range(self.tmax)]
         if start:
             self.start()
 
@@ -74,27 +79,32 @@ class threadpool(threading.Thread):
         #self.threads[slot].settask(func,args)
         #self.threads[slot].start()
         #====================
-        self.threads[slot]=threading.Thread(target=func,args=args)
+        if self.ishttp:
+            tmp=list(args)
+            tmp.append(self.https[slot])
+            self.threads[slot]=threading.Thread(target=func,args=tuple(tmp))
+        else:
+            self.threads[slot]=threading.Thread(target=func,args=args)
         self.threads[slot].start()
         if self.debug:
             print '=',self.threads[slot].getName()
+            
     def addtask(self,func,args):
         self.queue.put((func,args))
     
     def waitcomplete(self):
         for t in self.threads:
             if isinstance(t,threading.Thread) and t.isAlive():
+                self.wait=True
                 t.join()
     def waitPoolComplete(self):
         while not self.stop:
             time.sleep(1)
+            if self.wait:self.limit+=1
+            if self.limit>100:
+                break
         self.waitcomplete()
         
-    def setstop(self):
-        self.stop=True
-        
-    def setstart(self):
-        self.stop=False
 ########################################################################
 
 

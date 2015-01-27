@@ -212,23 +212,26 @@ def searchdesc4soup(ss):
             return s('td')[1].contents
     return None
 
-def getdesc4cnvd(cnvd,code='utf8',vid=False):
+def getdesc4cnvd(cnvd,code='utf8',vid=False,rhttp=None):
     url="http://www.cnvd.org.cn/flaw/show/CNVD-"+cnvd
     try:
-        wcnvd=httplib2.Http()
-        rp,con=wcnvd.request(url,headers=cnvd_heads)
+        if not rhttp:
+            rhttp=httplib2.Http(timeout=5)
+        rp,con=rhttp.request(url,headers=cnvd_heads)
         soup=BeautifulSoup(con)
         cname=soup('h1')[0].contents[0]
         rs=soup.find('table',{'class':"gg_detail"})
         rs=rs.find('tbody')
         rs=rs.findAll('tr')
         if vid:
-            return getvidforsoup(rs,code)
+            cve,bid=getvidforsoup(rs,code)
         desc=""
         rs=searchdesc4soup(rs)
         for i in rs:
             if type(i)==type(cname):
                 desc+=i
+        if vid:
+            return cve,bid,cname.encode(code),clearstr(desc).encode(code)
         return cname.encode(code),clearstr(desc).encode(code)
     except Exception:
         return "",""
@@ -378,11 +381,12 @@ def transen2zh(en=None,encode='utf-8'):
     except Exception:
         return None
     
-def getdesc4bid(bid):
-    sf=httplib2.Http()
+def getdesc4bid(bid,rhttp=None):
     url="http://www.securityfocus.com/bid/"+bid+"/discuss" 
     try:
-        rp,con=sf.request(url)
+        if not rhttp:
+            rhttp=httplib2.Http()        
+        rp,con=rhttp.request(url)
         soup=BeautifulSoup(con)
         rs=soup.find('div',id='vulnerability')
         ename=rs('span')[0].contents[0]
@@ -407,11 +411,12 @@ def getbid4link(link):
         l-=1
     return ""
 
-def getdesc4cve(cve,code='utf8'):
-    http=httplib2.Http()
+def getdesc4cve(cve,code='utf8',rhttp=None):
     url="http://www.cve.mitre.org/cgi-bin/cvename.cgi?name="+cve
     try:
-        rp,con=http.request(url)
+        if not rhttp:
+            rhttp=httplib2.Http()
+        rp,con=rhttp.request(url)
         soup=BeautifulSoup(con)
         rs=soup.find('table',width="100%",border="0",cellspacing="0",cellpadding="0")
         edesc=rs('tr')[3]('td')[0].contents[0]
