@@ -9,8 +9,10 @@ import re
 
 try:
     from bs4 import *
+    pos=0
 except Exception:
     from BeautifulSoup import *
+    pos=1
 
 cnvdlist=[]
 cvelist=[]
@@ -29,9 +31,9 @@ def getvid4cnvd(pool,cnvd):#,http):
                 ename=lib_rule.getdesc4bid(bid,rhttp=http)[0]
                 if ename:ename=ename.encode('gbk')
         cnvdlist.append((cve,bid,cnvd,cname,cdesc,ename,edesc))
-        #print cnvdlist[-1]
+        print cnvd,
     except Exception:
-        print "Error: %s" %cnvd
+        print "\nError: %s" %cnvd
 
 def geturl(year,total,current):
     if total==0 or current<total:
@@ -73,7 +75,10 @@ def getallcnvd():
     for i in range(start,end):
         print "Get %d cnvd from internet now...." %i
         getcnvd4year(i)
-        lib_pickle.dump2file('F:\\CVEVD\\cnvd_%d.pkl'%i,cnvdlist)
+        if pos:
+            lib_pickle.dump2file(os.getcwd()+'/cnvd_%d.pkl' %i,cnvdlist)
+        else:
+            lib_pickle.dump2file('F:\\CVEVD\\cnvd_%d.pkl'%i,cnvdlist)
         print "\n %d Number:" %i,len(cnvdlist)
         cnvdlist=[]
 
@@ -223,6 +228,9 @@ except Exception:
 
 
 getallcnvd()
+if pos:
+    print "craw ok"
+    exit()
 getallcve()
 
 cnvdlist=getcnvdlist()
