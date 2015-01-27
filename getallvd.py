@@ -70,7 +70,7 @@ def getcnvd4year(year):
 def getallcnvd():
     print "Get all cnvd from net......."
     global cnvdlist
-    for i in range(start,2016):
+    for i in range(start,end):
         print "Get %d cnvd from internet now...." %i
         getcnvd4year(i)
         lib_pickle.dump2file('F:\\CVEVD\\cnvd_%d.pkl'%i,cnvdlist)
@@ -213,11 +213,13 @@ def clearover(src,cnvdlist,cvelist):
 try:  
     tmax=int(sys.argv[1])
     ivt=float(sys.argv[2])
-    start=int(sys.argv[3]
+    start=int(sys.argv[3])
+    end=int(sys.argv[4])
 except Exception:
     tmax=50
     ivt=1
     start=2002
+    end=2016
 
 
 getallcnvd()
