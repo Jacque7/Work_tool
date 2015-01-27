@@ -100,11 +100,11 @@ class threadpool(threading.Thread):
     def waitPoolComplete(self):
         while not self.stop:
             time.sleep(1)
-            if self.wait:self.limit+=1
+            if self.wait:
+                self.limit+=1
+                print 'wait',self.limit
             if self.limit>100:
                 break
-        self.waitcomplete()
-        
 ########################################################################
 
 

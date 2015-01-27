@@ -8,9 +8,7 @@ Created on Wed Apr  9 22:31:25 2014
 #python 2.7
 try:
     import httplib2
-    #from BeautifulSoup import *
     import sys
-    from bs4 import *
     #import impacket.pcapfile as ppf
     import json
     import os
@@ -18,6 +16,11 @@ try:
     import re
 except Exception:
     pass
+
+try:
+    from bs4 import *
+except Exception:
+    from BeautifulSoup import *
 
 
 cnvd_heads={"Host":"www.cnvd.org.cn",
@@ -216,7 +219,7 @@ def getdesc4cnvd(cnvd,code='utf8',vid=False,rhttp=None):
     url="http://www.cnvd.org.cn/flaw/show/CNVD-"+cnvd
     try:
         if not rhttp:
-            rhttp=httplib2.Http(timeout=5)
+            rhttp=httplib2.Http()
         rp,con=rhttp.request(url,headers=cnvd_heads)
         soup=BeautifulSoup(con)
         cname=soup('h1')[0].contents[0]
@@ -565,3 +568,13 @@ def mystrip(s):
         return s[1:-1].strip()
     else:
         return s.strip()
+
+def getostype():
+    import platform
+    k=platform.system()
+    if k=="Windows":
+        return 0
+    elif k=="Linux":
+        return 1
+    else:
+        return -1

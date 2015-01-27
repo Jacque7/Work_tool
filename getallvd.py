@@ -9,15 +9,14 @@ import re
 
 try:
     from bs4 import *
-    pos=0
 except Exception:
     from BeautifulSoup import *
-    pos=1
+
 
 cnvdlist=[]
 cvelist=[]
 http=httplib2.Http()
-
+pos=lib_rule.getostype()
 def getvid4cnvd(pool,cnvd):#,http):
     #print cnvd,
     edesc=''
@@ -25,10 +24,10 @@ def getvid4cnvd(pool,cnvd):#,http):
     try:
         cve,bid,cname,cdesc=lib_rule.getdesc4cnvd(cnvd,code='gbk',vid=True)#,rhttp=http)
         if cve:
-            c_bid,edesc=lib_rule.getdesc4cve(cve,rhttp=http)
+            c_bid,edesc=lib_rule.getdesc4cve(cve)#,rhttp=http)
             if bid=='NULL':bid=c_bid
             if bid:
-                ename=lib_rule.getdesc4bid(bid,rhttp=http)[0]
+                ename=lib_rule.getdesc4bid(bid)[0]
                 if ename:ename=ename.encode('gbk')
         cnvdlist.append((cve,bid,cnvd,cname,cdesc,ename,edesc))
         print cnvd,
@@ -42,7 +41,7 @@ def geturl(year,total,current):
 
 
 def getcnvd4year(year):
-    pool=lib_TheardPool.threadpool(tmax,invrt=ivt,start=False)#,ishttp=True,tasks=200)
+    pool=lib_TheardPool.threadpool(tmax,invrt=ivt,start=False,tasks=200)#,ishttp=True,tasks=200)
     current=0
     total=0
     while True:
@@ -75,7 +74,7 @@ def getallcnvd():
     for i in range(start,end):
         print "Get %d cnvd from internet now...." %i
         getcnvd4year(i)
-        if pos:
+        if pos==1:
             lib_pickle.dump2file(os.getcwd()+'/cnvd_%d.pkl' %i,cnvdlist)
         else:
             lib_pickle.dump2file('F:\\CVEVD\\cnvd_%d.pkl'%i,cnvdlist)
@@ -228,9 +227,10 @@ except Exception:
 
 
 getallcnvd()
-if pos:
+if pos==1:
     print "craw ok"
     exit()
+exit()
 getallcve()
 
 cnvdlist=getcnvdlist()
