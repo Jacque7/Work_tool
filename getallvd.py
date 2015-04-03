@@ -41,7 +41,7 @@ def geturl(year,total,current):
 
 
 def getcnvd4year(year):
-    pool=lib_TheardPool.threadpool(tmax,invrt=ivt,start=False,tasks=200)#,ishttp=True,tasks=200)
+    pool=lib_TheardPool.threadpool(tmax,invrt=ivt,start=False)#,ishttp=True,tasks=200)
     current=0
     total=0
     while True:
